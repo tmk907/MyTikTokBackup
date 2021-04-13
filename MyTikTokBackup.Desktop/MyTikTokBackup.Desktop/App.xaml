@@ -1,0 +1,21 @@
+﻿<Application
+    x:Class="MyTikTokBackup.Desktop.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyTikTokBackup.Desktop"
+    xmlns:converters="using:MyTikTokBackup.Desktop.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <!-- Other merged dictionaries here -->
+            </ResourceDictionary.MergedDictionaries>
+            <!-- Other app resources here -->
+			<converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
+            <converters:VisibilityConverter x:Key="VisibiliyConverter"/>
+            <converters:VisibilityConverter x:Key="VisibilityNegationConverter" IsInverted="True"/>
+
+            <x:String x:Key="FontAwesomeSolid">ms-appx:///Assets/Fonts/fa-solid-900.otf#Font Awesome 5 Free</x:String>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

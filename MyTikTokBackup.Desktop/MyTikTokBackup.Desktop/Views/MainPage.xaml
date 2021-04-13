@@ -1,0 +1,28 @@
+﻿<Page
+    x:Class="MyTikTokBackup.Desktop.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyTikTokBackup.Desktop.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <x:String x:Key="Play">&#xf04b;</x:String>
+        <x:String x:Key="Pause">&#xf04c;</x:String>
+        <x:String x:Key="Next">&#xf051;</x:String>
+        <x:String x:Key="Previous">&#xf048;</x:String>
+    </Page.Resources>
+    <StackPanel>
+        <Button>
+            <Button.Content>
+                <TextBlock 
+                    FontFamily="{StaticResource FontAwesomeSolid}"
+                    Text="{StaticResource Previous}"/>
+            </Button.Content>
+        </Button>
+        <TextBlock Text="&#xf048;" FontFamily="{StaticResource FontAwesomeSolid}"/>
+        <TextBlock Text="{StaticResource Play}" FontFamily="{StaticResource FontAwesomeSolid}"/>
+
+    </StackPanel>
+</Page>

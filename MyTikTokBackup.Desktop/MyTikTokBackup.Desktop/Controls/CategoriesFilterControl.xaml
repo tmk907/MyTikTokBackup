@@ -1,0 +1,45 @@
+﻿<UserControl
+    x:Class="MyTikTokBackup.Desktop.Controls.CategoriesFilterControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyTikTokBackup.Desktop.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:converters="using:MyTikTokBackup.Desktop.Converters"
+    xmlns:viewmodels="using:MyTikTokBackup.Desktop.ViewModels"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converters:ColorToBrushConverter x:Key="HexToBrushConverter"/>
+        <UniformGridLayout x:Name="UniformGridLayout" 
+                           MinRowSpacing="8"
+                           MinColumnSpacing="8"/>
+        <DataTemplate x:Key="CategoryItemTemplate" x:DataType="viewmodels:CategoryFilter">
+            <Grid 
+                CornerRadius="2"
+                Background="{Binding Color, Converter={StaticResource HexToBrushConverter}}">
+                <CheckBox
+                    MinWidth="0"
+                    Margin="8,0,8,0"
+                    Content="{Binding Name}"
+                    IsChecked="{Binding IsSelected, Mode=TwoWay}"/>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ItemsRepeater
+            Grid.Row="0"
+            ItemsSource="{x:Bind Categories}"
+            ItemTemplate="{StaticResource CategoryItemTemplate}"
+            Layout="{StaticResource UniformGridLayout}"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <TextBox Text="{x:Bind NewCategoryName, Mode=TwoWay}"/>
+            <Button
+                Content="Add"
+                Command="{x:Bind AddCategoryCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

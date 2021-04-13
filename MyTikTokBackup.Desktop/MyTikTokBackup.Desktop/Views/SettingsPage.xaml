@@ -1,0 +1,26 @@
+﻿<Page
+    x:Class="MyTikTokBackup.Desktop.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyTikTokBackup.Desktop.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <StackPanel>
+            <Button
+                Content="Import favorite videos"
+                Command="{x:Bind ViewModel.ImportFavoriteVideosCommand}"/>
+            <ProgressRing
+                IsActive="{x:Bind ViewModel.ImportFavoriteVideosCommand.IsRunning}"/>
+
+            <TextBlock 
+                Text="{x:Bind ViewModel.DownloadsFolderPath, Mode=OneWay}"/>
+            <Button
+                Content="Downloads folder"
+                Command="{x:Bind ViewModel.ChooseDownloadsFolderCommand}"/>
+        </StackPanel>
+    </Grid>
+</Page>

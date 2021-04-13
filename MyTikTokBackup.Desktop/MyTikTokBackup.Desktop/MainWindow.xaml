@@ -1,0 +1,38 @@
+﻿<Window
+    x:Class="MyTikTokBackup.Desktop.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyTikTokBackup.Desktop"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <NavigationView 
+        x:Name="NavView"
+        PaneDisplayMode="Top"
+        Loaded="NavView_Loaded"
+        SelectionChanged="NavView_SelectionChanged"
+        BackRequested="NavView_BackRequested">
+        <NavigationView.MenuItems>
+            <!--<NavigationViewItem Tag="MainPage" Icon="Home" Content="Home"/>-->
+            <NavigationViewItem Tag="TikTokBrowserPage" Icon="Globe" Content="Browser"/>
+            <NavigationViewItem Tag="LibraryPage" Icon="Library" Content="Library"/>
+            <NavigationViewItem Tag="DownloadsPage" Icon="Download" Content="Downloads"/>
+            <!--<NavigationViewItemSeparator/>-->
+            <!--<NavigationViewItem Tag="YouTubeSearchPage" Content="Search">
+                <NavigationViewItem.Icon>
+                    <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{StaticResource Search}"/>
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>-->
+        </NavigationView.MenuItems>
+
+        <NavigationView.AutoSuggestBox>
+            <!-- See AutoSuggestBox documentation for
+                 more info about how to implement search. -->
+            <AutoSuggestBox x:Name="NavViewSearchBox" QueryIcon="Find"/>
+        </NavigationView.AutoSuggestBox>
+
+        <Frame x:Name="contentFrame" Padding="12,0,12,24" IsTabStop="True"
+                NavigationFailed="ContentFrame_NavigationFailed"/>
+    </NavigationView>
+</Window>
