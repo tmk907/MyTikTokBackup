@@ -9,6 +9,10 @@ using Microsoft.Web.WebView2.Core;
 using Serilog;
 using MyTikTokBackup.Core.TikTok;
 using MyTikTokBackup.Desktop.ViewModels;
+using Newtonsoft.Json;
+using System.IO;
+using System.Threading.Tasks;
+using Serilog.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -63,7 +67,7 @@ namespace MyTikTokBackup.Desktop.Views
             WeakReferenceMessenger.Default.Send(new AddressChangedMessage(user));
         }
 
-        private void CoreWebView2_WebResourceResponseReceived(CoreWebView2 sender, CoreWebView2WebResourceResponseReceivedEventArgs args)
+        private async void CoreWebView2_WebResourceResponseReceived(CoreWebView2 sender, CoreWebView2WebResourceResponseReceivedEventArgs args)
         {
             var uri = args.Request.Uri;
 
@@ -90,6 +94,9 @@ namespace MyTikTokBackup.Desktop.Views
                     Log.Information($"Posted {uri}");
                     Log.Information($"Posted {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
                     ViewModel.FetchPostedVideosVM.Headers = GetHeaders(args.Request.Headers);
+
+                    var videos = await GetVideosFromResponseAsync(args.Response);
+                    ViewModel.FetchPostedVideosVM.Videos.AddRange(videos);
                 }
             }
             else if (uri.Contains("api/favorite/item_list"))
@@ -100,8 +107,41 @@ namespace MyTikTokBackup.Desktop.Views
                     Log.Information($"Favorites {uri}");
                     Log.Information($"Favorites {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
                     ViewModel.FetchFavoriteVideosVM.Headers = GetHeaders(args.Request.Headers);
+
+                    var videos = await GetVideosFromResponseAsync(args.Response);
+                    ViewModel.FetchFavoriteVideosVM.Videos.AddRange(videos);
                 }
             }
+        }
+
+        private async Task<List<ItemInfo>> GetVideosFromResponseAsync(CoreWebView2WebResourceResponseView response)
+        {
+            var content = await DeserializeContentAsync<VideosReponse>(response);
+            if (content?.ItemList == null) return new List<ItemInfo>();
+            return content.ItemList;
+        }
+
+        private async Task<T> DeserializeContentAsync<T>(CoreWebView2WebResourceResponseView response)
+        {
+            try
+            {
+                var content = await response.GetContentAsync();
+                if (content != null)
+                {
+                    JsonSerializer serializer = new JsonSerializer();
+                    using (StreamReader sr = new StreamReader(content.AsStreamForRead()))
+                    using (JsonReader reader = new JsonTextReader(sr))
+                    {
+                        T result = serializer.Deserialize<T>(reader);
+                        return result;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+            return default(T);
         }
 
         private IEnumerable<Header> GetHeaders(CoreWebView2HttpRequestHeaders headers)
