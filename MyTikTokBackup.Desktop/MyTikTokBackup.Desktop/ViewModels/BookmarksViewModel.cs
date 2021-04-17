@@ -55,11 +55,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             var url = CurrentUrl;
             var user = GetUserFromUrl(url);
-            SerilogHelper.LogInfo(url);
-            if (string.IsNullOrEmpty(user) || Bookmarks.Any(x => x.User == user)) return;
-            Bookmarks.Add(new Bookmark(user, url));
-            SaveBookmarks(Bookmarks);
-            OnPropertyChanged(nameof(IsBookmarked));
+            AddUsersToBookmarks(new[] { user });
         }
 
         public void RemoveFromBookmarks()
@@ -84,7 +80,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         public void AddUsersToBookmarks(IEnumerable<string> users)
         {
             var toAdd = users
-                .Select(user => "@" + user)
+                .Select(user => user.StartsWith('@') ? user : "@" + user)
                 .Where(user => !Bookmarks.Any(b => b.User == user))
                 .Select(user => new Bookmark(user, $"https://tiktok.com/{user}"));
             Bookmarks.AddRange(toAdd);

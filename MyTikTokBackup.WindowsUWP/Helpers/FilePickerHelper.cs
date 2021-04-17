@@ -45,6 +45,7 @@ namespace MyTikTokBackup.WindowsUWP.Helpers
             {
                 var picker = new FolderPicker();
                 picker.FileTypeFilter.Add("*");
+                picker.SuggestedStartLocation = PickerLocationId.Downloads;
 
                 IntPtr windowHandle = _windowHandle;
                 var initializeWithWindow = picker.As<IInitializeWithWindow>();

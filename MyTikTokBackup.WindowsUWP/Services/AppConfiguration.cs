@@ -10,13 +10,15 @@ namespace MyTikTokBackup.WindowsUWP.Services
     {
         public string DownloadsFolder 
         {
-            get { return Preferences.Get(nameof(DownloadsFolder), ""); }
+            get { return Preferences.Get(nameof(DownloadsFolder), DownloadsFolderPath); }
             set { Preferences.Set(nameof(DownloadsFolder), value); } 
         }
 
         public string Categories => SettingsFiles.Categories;
         public string Metadata => SettingsFiles.Metadata;
         public string Videos => SettingsFiles.Videos;
+
+        private string DownloadsFolderPath => Windows.Storage.UserDataPaths.GetDefault().Downloads;
     }
 }
 
