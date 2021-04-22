@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 
 namespace MyTikTokBackup.Core.Services
 {
-    public interface IPickerService
+    public interface IStorageService
     {
-        Task LauchFile(string filePath);
-        Task LauchFolder(string folderPath);
+        Task OpenFile(string filePath);
+        Task OpenFolder(string folderPath);
         Task<string> PickFile(IEnumerable<string> fileTypes);
         Task<string> PickFolder();
     }

@@ -93,7 +93,7 @@ namespace MyTikTokBackup.Desktop
             services.AddSingleton<TikTokBrowserViewModel>();
             services.AddTransient<IDispatcher, DispatcherHelper>();
             //services.AddTransient<IDispatcher, Dispatcher>();
-            services.AddTransient<IPickerService, PickerService>();
+            services.AddTransient<IStorageService, StorageService>();
 
             services.AddSingleton<INavigationService, NavigationService2>();
             services.AddSingleton(ConfigureMapper());

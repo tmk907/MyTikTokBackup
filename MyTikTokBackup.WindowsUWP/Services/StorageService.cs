@@ -8,7 +8,7 @@ using Windows.System;
 
 namespace MyTikTokBackup.WindowsUWP.Services
 {
-    public class PickerService : IPickerService
+    public class StorageService : IStorageService
     {
         public async Task<string> PickFile(IEnumerable<string> fileTypes)
         {
@@ -22,12 +22,12 @@ namespace MyTikTokBackup.WindowsUWP.Services
             return folder?.Path;
         }
 
-        public async Task LauchFolder(string folderPath)
+        public async Task OpenFolder(string folderPath)
         {
             await Launcher.LaunchFolderPathAsync(folderPath);
         }
 
-        public async Task LauchFile(string filePath)
+        public async Task OpenFile(string filePath)
         {
             var file = await StorageFile.GetFileFromPathAsync(filePath);
             await Launcher.LaunchFileAsync(file);
