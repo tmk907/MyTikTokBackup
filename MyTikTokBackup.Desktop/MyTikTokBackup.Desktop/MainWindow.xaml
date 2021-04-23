@@ -10,13 +10,14 @@
     <NavigationView 
         x:Name="NavView"
         PaneDisplayMode="Top"
+        AlwaysShowHeader="False"
         Loaded="NavView_Loaded"
         SelectionChanged="NavView_SelectionChanged"
         BackRequested="NavView_BackRequested">
         <NavigationView.MenuItems>
             <!--<NavigationViewItem Tag="MainPage" Icon="Home" Content="Home"/>-->
             <NavigationViewItem Tag="TikTokBrowserPage" Icon="Globe" Content="Browser"/>
-            <NavigationViewItem Tag="LibraryPage" Icon="Library" Content="Library"/>
+            <!--<NavigationViewItem Tag="LibraryPage" Icon="Library" Content="Library"/>-->
             <NavigationViewItem Tag="DownloadsPage" Icon="Download" Content="Downloads"/>
             <!--<NavigationViewItemSeparator/>-->
             <!--<NavigationViewItem Tag="YouTubeSearchPage" Content="Search">
@@ -26,13 +27,13 @@
             </NavigationViewItem>-->
         </NavigationView.MenuItems>
 
-        <NavigationView.AutoSuggestBox>
-            <!-- See AutoSuggestBox documentation for
-                 more info about how to implement search. -->
+        <!--<NavigationView.AutoSuggestBox>
+            --><!-- See AutoSuggestBox documentation for
+                 more info about how to implement search. --><!--
             <AutoSuggestBox x:Name="NavViewSearchBox" QueryIcon="Find"/>
-        </NavigationView.AutoSuggestBox>
+        </NavigationView.AutoSuggestBox>-->
 
-        <Frame x:Name="contentFrame" Padding="12,0,12,24" IsTabStop="True"
+        <Frame x:Name="contentFrame" Margin="2" IsTabStop="True"
                 NavigationFailed="ContentFrame_NavigationFailed"/>
     </NavigationView>
 </Window>

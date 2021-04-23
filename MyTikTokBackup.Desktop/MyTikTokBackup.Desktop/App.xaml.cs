@@ -43,7 +43,7 @@ namespace MyTikTokBackup.Desktop
             nav.Register<SettingsPage, SettingsViewModel>();
             nav.Register<TikTokBrowserPage, TikTokBrowserViewModel>();
             
-            
+
             Log.Logger = new LoggerConfiguration()
                .MinimumLevel.Debug()
                .WriteTo.File(SettingsFiles.LogsFile, rollingInterval: RollingInterval.Day)
@@ -64,7 +64,6 @@ namespace MyTikTokBackup.Desktop
             {
                 _init = true;
                 m_window = new MainWindow();
-
                 var windowNative = m_window.As<IWindowNative>();
                 m_windowHandle = windowNative.WindowHandle;
                 FilePickerHelper.Init(m_windowHandle);

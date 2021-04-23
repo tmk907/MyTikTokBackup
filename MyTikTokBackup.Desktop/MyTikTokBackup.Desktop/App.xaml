@@ -15,6 +15,17 @@
             <converters:VisibilityConverter x:Key="VisibiliyConverter"/>
             <converters:VisibilityConverter x:Key="VisibilityNegationConverter" IsInverted="True"/>
 
+
+            <Style TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="CornerRadius" Value="4"/>
+            </Style>
+            <Style TargetType="RichTextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
             <x:String x:Key="FontAwesomeSolid">ms-appx:///Assets/Fonts/fa-solid-900.otf#Font Awesome 5 Free</x:String>
         </ResourceDictionary>
     </Application.Resources>

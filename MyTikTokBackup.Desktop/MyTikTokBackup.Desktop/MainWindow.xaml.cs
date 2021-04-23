@@ -23,7 +23,7 @@ namespace MyTikTokBackup.Desktop
         public MainWindow()
         {
             NavigationService = Ioc.Default.GetService<INavigationService>();
-
+            Title = "MyTikTokBackup";
             this.InitializeComponent();
             NavigationService.Init(contentFrame);
         }

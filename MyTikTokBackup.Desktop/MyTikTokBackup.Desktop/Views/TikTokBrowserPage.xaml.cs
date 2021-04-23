@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Threading.Tasks;
 using Serilog.Core;
+using Windows.Storage.Streams;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -89,27 +90,24 @@ namespace MyTikTokBackup.Desktop.Views
             {
                 if (Flurl.Url.Parse(uri).QueryParams.TryGetFirst("cursor", out var cursor))
                 {
-                    ViewModel.FetchPostedVideosVM.VideosUrl= uri;
-                    var headers = HeadersToString(args.Request.Headers);
                     Log.Information($"Posted {uri}");
                     Log.Information($"Posted {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
-                    ViewModel.FetchPostedVideosVM.Headers = GetHeaders(args.Request.Headers);
 
+                    ViewModel.FetchPostedVideosVM.Headers = GetHeaders(args.Request.Headers);
                     var videos = await GetVideosFromResponseAsync(args.Response);
-                    ViewModel.FetchPostedVideosVM.Videos.AddRange(videos);
+                    ViewModel.FetchPostedVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchPostedVideosVM.Videos));
                 }
             }
             else if (uri.Contains("api/favorite/item_list"))
             {
                 if (Flurl.Url.Parse(uri).QueryParams.TryGetFirst("cursor", out var cursor))
                 {
-                    ViewModel.FetchFavoriteVideosVM.VideosUrl = uri;
                     Log.Information($"Favorites {uri}");
                     Log.Information($"Favorites {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
+                    
                     ViewModel.FetchFavoriteVideosVM.Headers = GetHeaders(args.Request.Headers);
-
                     var videos = await GetVideosFromResponseAsync(args.Response);
-                    ViewModel.FetchFavoriteVideosVM.Videos.AddRange(videos);
+                    ViewModel.FetchFavoriteVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
                 }
             }
         }
@@ -125,16 +123,10 @@ namespace MyTikTokBackup.Desktop.Views
         {
             try
             {
-                var content = await response.GetContentAsync();
-                if (content != null)
+                var contentStream = await response.GetContentAsync();
+                if (contentStream != null)
                 {
-                    JsonSerializer serializer = new JsonSerializer();
-                    using (StreamReader sr = new StreamReader(content.AsStreamForRead()))
-                    using (JsonReader reader = new JsonTextReader(sr))
-                    {
-                        T result = serializer.Deserialize<T>(reader);
-                        return result;
-                    }
+                    return DeserializeFromStream<T>(contentStream);
                 }
             }
             catch (Exception ex)
@@ -142,6 +134,17 @@ namespace MyTikTokBackup.Desktop.Views
                 Log.Error(ex.ToString());
             }
             return default(T);
+        }
+
+        private T DeserializeFromStream<T>(IRandomAccessStream stream)
+        {
+            JsonSerializer serializer = new JsonSerializer();
+            using (StreamReader sr = new StreamReader(stream.AsStreamForRead()))
+            using (JsonReader reader = new JsonTextReader(sr))
+            {
+                T result = serializer.Deserialize<T>(reader);
+                return result;
+            }
         }
 
         private IEnumerable<Header> GetHeaders(CoreWebView2HttpRequestHeaders headers)

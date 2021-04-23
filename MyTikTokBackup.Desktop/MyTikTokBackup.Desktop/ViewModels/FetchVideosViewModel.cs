@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using Flurl;
-using Flurl.Http;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
 using MvvmHelpers;
-using Newtonsoft.Json;
-using Serilog;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Core.TikTok;
@@ -27,22 +17,13 @@ namespace MyTikTokBackup.Desktop.ViewModels
         private readonly IDownloadsManager _downloadsManager;
 
         public IEnumerable<Header> Headers { get; set; }
-        public string VideosUrl { get; set; }
-
-        private HttpClient _httpClient;
         protected DownloadType type = DownloadType.Other;
         
         public FetchVideosViewModel(INavigationService navigationService, IDownloadsManager downloadsManager)
         {
             _navigationService = navigationService;
             _downloadsManager = downloadsManager;
-            HttpClientHandler handler = new HttpClientHandler()
-            {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-            };
-            _httpClient = new HttpClient(handler);
-            FetchVideosCommand = new AsyncRelayCommand((token) => FetchVideos(token), () => !FetchVideosCommand.IsRunning);
-            DownloadVideosCommand = new RelayCommand(() => AddVideosToDownloadQueue(), () => !FetchVideosCommand.IsRunning);
+            DownloadVideosCommand = new RelayCommand(() => AddVideosToDownloadQueue());
             IsActive = true;
         }
 
@@ -54,82 +35,13 @@ namespace MyTikTokBackup.Desktop.ViewModels
         }
         
         public ObservableRangeCollection<ItemInfo> Videos { get; } = new ObservableRangeCollection<ItemInfo>();
-        public AsyncRelayCommand FetchVideosCommand { get; }
         public RelayCommand DownloadVideosCommand { get; }
-
-
-        private int maxItemsToFetch;
-        public int MaxItemsToFetch
-        {
-            get { return maxItemsToFetch; }
-            set { SetProperty(ref maxItemsToFetch, value); }
-        }
-
-        public void CancelFetchingVideos()
-        {
-            SerilogHelper.LogInfo("");
-            FetchVideosCommand.Cancel();
-        }
 
         public void Receive(UserChangedMessage message)
         {
             User = message.User;
-            VideosUrl = "";
             Videos.Clear();
         }
-
-        private async Task FetchVideos(CancellationToken cancellationToken)
-        {
-            SerilogHelper.LogInfo("");
-            var url = VideosUrl;
-            if (!string.IsNullOrEmpty(url))
-            {
-                SerilogHelper.LogInfo("");
-                Videos.Clear();
-                url = url.SetQueryParam("cursor", "0");
-                bool hasMore = true;
-                try
-                {
-                    while (hasMore && CanFetchMoreItems)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            SerilogHelper.LogInfo("Cancellation requested");
-                            break;
-                        }
-
-                        var msg = new HttpRequestMessage(HttpMethod.Get, new Uri(url));
-                        foreach (var header in Headers)
-                        {
-                            msg.Headers.Add(header.Name, header.Value);
-                        }
-                        var response = await _httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                        response.EnsureSuccessStatusCode();
-                        VideosReponse result;
-                        JsonSerializer serializer = new JsonSerializer();
-                        using (var stream = await response.Content.ReadAsStreamAsync())
-                        using (StreamReader sr = new StreamReader(stream))
-                        using (JsonReader reader = new JsonTextReader(sr))
-                        {
-                            result = serializer.Deserialize<VideosReponse>(reader);
-                        }
-
-                        //var result = await url.GetJsonAsync<VideosReponse>(cancellationToken);
-                        if (result.ItemList is not null) Videos.AddRange(result.ItemList.Take(ItemsToTake));
-                        hasMore = result.HasMore;
-                        url = url.SetQueryParam("cursor", result.Cursor);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex.ToString());
-                }
-            }
-        }
-
-        private bool CanFetchMoreItems => Videos.Count < MaxItemsToFetch || MaxItemsToFetch <= 0;
-
-        private int ItemsToTake => MaxItemsToFetch <= 0 ? 1000 : MaxItemsToFetch - Videos.Count;
 
         protected IEnumerable<ItemInfo> GetItemsWithHeaders()
         {

@@ -14,9 +14,12 @@ using MyTikTokBackup.Core.Helpers;
 using MyTikTokBackup.Core.Messages;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.TikTok;
+using EnumsNET;
 
 namespace MyTikTokBackup.Core.Services
 {
+    public record VideoSource(string UserUniqueId, string Type);
+
     public class DownloadQueueItem
     {
         public List<Header> Headers { get; set; }
@@ -25,6 +28,7 @@ namespace MyTikTokBackup.Core.Services
         public string VideoId { get; set; }
         public string PlayAddress { get; set; }
         public string FilePath { get; set; }
+        public VideoSource VideoSource { get; set; }
 
         private DownloadStatus downloadStatus = DownloadStatus.NotDownloaded;
         public DownloadStatus DownloadStatus
@@ -44,7 +48,7 @@ namespace MyTikTokBackup.Core.Services
             }
         }
 
-        public static DownloadQueueItem Create(ItemInfo fav, string filePath, DownloadStatus downloadStatus = DownloadStatus.NotDownloaded)
+        public static DownloadQueueItem Create(ItemInfo fav, VideoSource videoSource, string filePath, DownloadStatus downloadStatus = DownloadStatus.NotDownloaded)
         {
             return new DownloadQueueItem
             {
@@ -54,6 +58,7 @@ namespace MyTikTokBackup.Core.Services
                 PlayAddress = fav.Video.PlayAddr,
                 VideoId = fav.Id,
                 FilePath = filePath,
+                VideoSource = videoSource,
                 downloadStatus = downloadStatus
             };
         }
@@ -65,7 +70,7 @@ namespace MyTikTokBackup.Core.Services
     {
         IEnumerable<DownloadQueueItem> ItemsToDownload { get; }
 
-        void Clear();
+        void Cancel();
         void QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items);
         QueueState GetQueueState();
     }
@@ -97,22 +102,26 @@ namespace MyTikTokBackup.Core.Services
             _localVideosService.Refresh();
             var toDownload = items
                 .Where(x => !_itemsToDownload.ContainsKey(x.Id))
-                .Select(x =>
-                    DownloadQueueItem.Create(x, PrepareFilePath(user, type, x), GetStatus(x.Id, x.Video.PlayAddr)))
                 .ToList();
-
-            foreach (var item in toDownload)
+            var queue = new List<DownloadQueueItem>();
+            foreach(var item in toDownload)
             {
-                _itemsToDownload.TryAdd(item.VideoId, item);
+                var videoSource = new VideoSource(user, type.ToString());
+                var filePath = PrepareFilePath(videoSource, item);
+                var status = GetStatus(item.Id, item.Video.PlayAddr);
+                var queueItem = DownloadQueueItem.Create(item, videoSource, filePath, status);
+                _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
+                queue.Add(queueItem);
             }
-            _downloadService.QueueItems(toDownload.Where(x => x.DownloadStatus == DownloadStatus.NotDownloaded));
+
+            _downloadService.QueueItems(queue);
         }
 
-        public void Clear()
+        public void Cancel()
         {
             _itemsToDownload.Clear();
             downloadedCount = 0;
-            _downloadService.Clear();
+            _downloadService.Cancel();
         }
 
         public QueueState GetQueueState()
@@ -121,11 +130,11 @@ namespace MyTikTokBackup.Core.Services
             return new QueueState(downloadedCount, _itemsToDownload.Count);
         }
 
-        private string PrepareFilePath(string user, DownloadType type, ItemInfo item)
+        private string PrepareFilePath(VideoSource videoSource, ItemInfo item)
         {
             var videoName = $"{item.Author.UniqueId} - {item.Desc} [{item.Id}]";
             videoName = FilePathHelper.RemoveForbiddenChars(videoName);
-            var folderPath = Path.Combine(_appConfiguration.DownloadsFolder, user, type.ToString());
+            var folderPath = Path.Combine(_appConfiguration.DownloadsFolder, videoSource.UserUniqueId, videoSource.Type);
             Directory.CreateDirectory(folderPath);
             var filePath = Path.Combine(folderPath, videoName + ".mp4");
             return filePath;
@@ -192,13 +201,13 @@ namespace MyTikTokBackup.Core.Services
 
         public void QueueItems(IEnumerable<DownloadQueueItem> items)
         {
-            foreach (var item in items)
+            foreach (var item in items.Where(x => x.DownloadStatus != DownloadStatus.Downloaded))
             {
                 _queue.Add(item);
             }
         }
 
-        public void Clear()
+        public void Cancel()
         {
             cts.Cancel();
             cts.Dispose();

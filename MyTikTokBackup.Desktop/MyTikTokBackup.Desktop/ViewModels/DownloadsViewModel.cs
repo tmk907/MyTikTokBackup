@@ -10,43 +10,38 @@ using Serilog;
 using MyTikTokBackup.Core.Messages;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.Services;
-using MyTikTokBackup.WindowsUWP.Helpers;
+using System.Collections.ObjectModel;
+using System.IO;
 
 namespace MyTikTokBackup.Desktop.ViewModels
 {
     public class DownloadsViewModel : ObservableObject
     {
         private readonly IDownloadsManager _downloadsManager;
-        private readonly IImportService _importService;
         private readonly IDispatcher _dispatcher;
+        private readonly IStorageService _storageService;
 
-        public DownloadsViewModel(IDownloadsManager downloadsManager,
-            IImportService importService, IDispatcher dispatcher)
+        public DownloadsViewModel(IDownloadsManager downloadsManager, IDispatcher dispatcher, IStorageService storageService)
         {
             _downloadsManager = downloadsManager;
-            _importService = importService;
             _dispatcher = dispatcher;
-            ClearCommand = new RelayCommand(Clear);
+            _storageService = storageService;
+            CancelCommand = new RelayCommand(Cancel);
         }
 
         public async Task Init()
         {
-            UpdateAll();
+            UpdateState();
+            UpdateQueueByUser();
 
             StrongReferenceMessenger.Default.Register<DownloadStatusChanged>(this, (r, m) =>
             {
                 Log.Information($"DownloadStatusChanged {m.Id} {m.DownloadStatus}");
 
-                var item = Videos.FirstOrDefault(x => x.Id == m.Id);
-                if (item != null)
+                _dispatcher.Run(() =>
                 {
-                    _dispatcher.Run(() =>
-                    {
-                        item.DownloadStatus = m.DownloadStatus;
-                        Downloaded = _downloadsManager.GetQueueState().Downloaded;
-                        Total = _downloadsManager.GetQueueState().Total;
-                    });
-                }
+                    UpdateState();
+                });
             });
         }
 
@@ -54,7 +49,6 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             StrongReferenceMessenger.Default.Unregister<DownloadStatusChanged>(this);
         }
-
 
         private int downloaded;
         public int Downloaded
@@ -70,35 +64,116 @@ namespace MyTikTokBackup.Desktop.ViewModels
             set { SetProperty(ref total, value); }
         }
 
-        public ObservableRangeCollection<DownloadVideo> Videos { get; } = new ObservableRangeCollection<DownloadVideo>();
 
-        public IRelayCommand ClearCommand { get; }
-
-        private void Clear()
+        private int error;
+        public int Error
         {
-            _downloadsManager.Clear();
-            UpdateAll();
+            get { return error; }
+            set { SetProperty(ref error, value); }
         }
 
-        private void UpdateAll()
+        public ObservableRangeCollection<string> DownloadingVideos { get; } = new ObservableRangeCollection<string>();
+
+        public ObservableCollection<UserQueueState> QueueByUser { get; } = new ObservableCollection<UserQueueState>();
+
+        public IRelayCommand CancelCommand { get; }
+
+        private void Cancel()
         {
-            Videos.ReplaceRange(_downloadsManager.ItemsToDownload.Select(x => new DownloadVideo
+            _downloadsManager.Cancel();
+        }
+
+        public async Task OpenFolder(UserQueueState item)
+        {
+            var filePath = _downloadsManager.ItemsToDownload
+                .FirstOrDefault(x => x.VideoSource == item.VideoSource)?.FilePath;
+            if (string.IsNullOrEmpty(filePath)) return;
+            await _storageService.OpenFolder(Path.GetDirectoryName(filePath));
+        }
+
+        private void UpdateState()
+        {
+            UpdateDownloadingVideos();
+            UpdateQueueByUser();
+
+            Total = _downloadsManager.ItemsToDownload.Count();
+            Downloaded = _downloadsManager.ItemsToDownload.Count(x => x.DownloadStatus == DownloadStatus.Downloaded);
+            Error = _downloadsManager.ItemsToDownload.Count(x => x.DownloadStatus == DownloadStatus.Error);
+        }
+
+        private void UpdateDownloadingVideos()
+        {
+            var downloading = _downloadsManager.ItemsToDownload
+                .Where(x => x.DownloadStatus == DownloadStatus.Downloading)
+                .Select(x => System.IO.Path.GetFileNameWithoutExtension(x.FilePath)).ToList();
+            var toAdd = downloading.Where(x => !DownloadingVideos.Contains(x)).ToList();
+            var toRemove = DownloadingVideos.Except(downloading).ToList();
+            foreach (var item in toAdd)
             {
-                FilePath = x.FilePath,
-                Id = x.VideoId,
-                Title = System.IO.Path.GetFileNameWithoutExtension(x.FilePath),
-                DownloadStatus = x.DownloadStatus,
-            }));
-            Downloaded = _downloadsManager.GetQueueState().Downloaded;
-            Total = _downloadsManager.GetQueueState().Total;
+                DownloadingVideos.Add(item);
+            }
+            foreach (var item in toRemove)
+            {
+                DownloadingVideos.Remove(item);
+            }
         }
 
-        private bool _canExecute = true;
-        private void NotifyCanExecuteChanged(bool canExecute)
+        private void UpdateQueueByUser()
         {
-            _canExecute = canExecute;
-            //DownloadCommand.NotifyCanExecuteChanged();
-            //DownloadAndImportCommand.NotifyCanExecuteChanged();
+            var grouped = _downloadsManager.ItemsToDownload.GroupBy(x => x.VideoSource).ToList();
+            var toRemove = QueueByUser.Where(x => !grouped.Any(g => g.Key == x.VideoSource)).ToList();
+            toRemove.ForEach(x => QueueByUser.Remove(x));
+            foreach (var group in grouped)
+            {
+                var a = QueueByUser.FirstOrDefault(x => x.VideoSource == group.Key);
+                if (a == null)
+                {
+                    a = new UserQueueState();                    
+                    QueueByUser.Add(a);
+                }
+                a.VideoSource = group.Key;
+                a.Downloaded = group.Count(x => x.DownloadStatus == DownloadStatus.Downloaded);
+                a.Error = group.Count(x => x.DownloadStatus == DownloadStatus.Error);
+                a.Total = group.Count();
+            }
+        }
+    }
+
+    public class UserQueueState : ObservableObject
+    {
+        private int downloaded;
+        public int Downloaded
+        {
+            get { return downloaded; }
+            set { SetProperty(ref downloaded, value); }
+        }
+
+        private int total;
+        public int Total
+        {
+            get { return total; }
+            set { SetProperty(ref total, value); }
+        }
+
+
+        private int error;
+        public int Error
+        {
+            get { return error; }
+            set { SetProperty(ref error, value); }
+        }
+
+        public VideoSource VideoSource { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return obj is UserQueueState state &&
+                   EqualityComparer<VideoSource>.Default.Equals(VideoSource, state.VideoSource);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(VideoSource);
         }
     }
 }
