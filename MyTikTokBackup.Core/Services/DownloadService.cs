@@ -219,8 +219,16 @@ namespace MyTikTokBackup.Core.Services
         {
             Log.Information($"Start download {item.VideoId} {item.Description}");
             item.DownloadStatus = DownloadStatus.Downloading;
+            var overwrite = false;
+            var tempPath = item.FilePath + ".download";
             try
             {
+                if (File.Exists(item.FilePath) && !overwrite)
+                {
+                    item.DownloadStatus = DownloadStatus.Downloaded;
+                    return;
+                }
+
                 var msg = new HttpRequestMessage(HttpMethod.Get, new Uri(item.PlayAddress));
                 foreach (var header in item.Headers)
                 {
@@ -232,9 +240,10 @@ namespace MyTikTokBackup.Core.Services
                 Log.Information($"Download response success {item.VideoId} {item.Description}");
 
                 using Stream contentStream = await response.Content.ReadAsStreamAsync();
-                using var fileStream = new FileStream(item.FilePath, FileMode.Create);
+                using var fileStream = new FileStream(tempPath, FileMode.Create);
                 await contentStream.CopyToAsync(fileStream, cancellationToken);
-                
+                var fileInfo = new FileInfo(tempPath);
+                fileInfo.MoveTo(item.FilePath);
                 item.DownloadStatus = DownloadStatus.Downloaded;
             }
             catch (Exception ex)
@@ -255,8 +264,8 @@ namespace MyTikTokBackup.Core.Services
     {
         public static void RemoveIfExist<T>(this List<T> list, Func<T,bool> predicate)
         {
-            var item = list.FirstOrDefault(predicate);
-            if (item != null)
+            var items = list.Where(predicate);
+            foreach(var item in items)
             {
                 list.Remove(item);
             }
