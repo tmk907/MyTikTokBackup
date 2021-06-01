@@ -74,11 +74,16 @@ namespace MyTikTokBackup.Core.Services
         {
             try
             {
-                _idToPath = _filePaths.Select(x => new
+                var map = _filePaths.Select(x => new
                 {
                     Id = GetId(x),
                     Path = x
-                }).Where(x => x.Id != "").ToDictionary(x => x.Id, x => x.Path);
+                }).Where(x => x.Id != "");
+                _idToPath = new Dictionary<string, string>();
+                foreach(var item in map)
+                {
+                    _idToPath.TryAdd(item.Id, item.Path);
+                }
             }
             catch (Exception ex)
             {

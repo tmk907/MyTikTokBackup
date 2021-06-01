@@ -72,7 +72,6 @@ namespace MyTikTokBackup.Core.Services
 
         void Cancel();
         void QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items);
-        QueueState GetQueueState();
     }
 
     public class DownloadsManager : IDownloadsManager
@@ -113,7 +112,7 @@ namespace MyTikTokBackup.Core.Services
                 _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
                 queue.Add(queueItem);
             }
-
+            Log.Information($"{nameof(QueueVideos)} items: {items.Count()}, to download: {toDownload.Count} queue {queue.Count} _itemsToDownload {_itemsToDownload.Count}");
             _downloadService.QueueItems(queue);
         }
 
@@ -122,12 +121,6 @@ namespace MyTikTokBackup.Core.Services
             _itemsToDownload.Clear();
             downloadedCount = 0;
             _downloadService.Cancel();
-        }
-
-        public QueueState GetQueueState()
-        {
-            var downloadedCount = _itemsToDownload.Count(x => x.Value.DownloadStatus == DownloadStatus.Downloaded);
-            return new QueueState(downloadedCount, _itemsToDownload.Count);
         }
 
         private string PrepareFilePath(VideoSource videoSource, ItemInfo item)
@@ -239,9 +232,13 @@ namespace MyTikTokBackup.Core.Services
 
                 Log.Information($"Download response success {item.VideoId} {item.Description}");
 
-                using Stream contentStream = await response.Content.ReadAsStreamAsync();
-                using var fileStream = new FileStream(tempPath, FileMode.Create);
-                await contentStream.CopyToAsync(fileStream, cancellationToken);
+                using (var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    using (var fileStream = new FileStream(tempPath, FileMode.Create))
+                    {
+                        await contentStream.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
+                    }
+                }
                 var fileInfo = new FileInfo(tempPath);
                 fileInfo.MoveTo(item.FilePath);
                 item.DownloadStatus = DownloadStatus.Downloaded;
