@@ -10,5 +10,7 @@ namespace MyTikTokBackup.WindowsUWP.Helpers
         public static string Metadata => Path.Combine(ApplicationData.Current.LocalFolder.Path, "db.json");
 
         public static string LogsFile => Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs.txt");
+
+        public static string AppLocalFolder => ApplicationData.Current.LocalFolder.Path;
     }
 }

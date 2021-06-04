@@ -2,7 +2,7 @@
 
 namespace MyTikTokBackup.Core.Database
 {
-    class Author
+    public class Author
     {
         public string Id { get; set; }
         public string Nickname { get; set; }
@@ -11,17 +11,17 @@ namespace MyTikTokBackup.Core.Database
         public AuthorStats Stats { get; set; }
     }
 
-    class AuthorStats
+    public class AuthorStats
     {
-        public int DiggCount { get; set; }
-        public int FollowerCount { get; set; }
-        public int FollowingCount { get; set; }
-        public int HeartCount { get; set; }
-        public int VideoCount { get; set; }
+        public long DiggCount { get; set; }
+        public long FollowerCount { get; set; }
+        public long FollowingCount { get; set; }
+        public long HeartCount { get; set; }
+        public long VideoCount { get; set; }
 
-        public DateTimeOffset LastUpdated { get; set; }
+        public DateTime LastUpdated { get; set; }
 
-        public static AuthorStats Create(int digg, int follower, int following, int heart, int video)
+        public static AuthorStats Create(long digg, long follower, long following, long heart, long video)
         {
             return new AuthorStats
             {
@@ -30,7 +30,7 @@ namespace MyTikTokBackup.Core.Database
                 FollowingCount = following,
                 HeartCount = heart,
                 VideoCount = video,
-                LastUpdated = DateTimeOffset.Now
+                LastUpdated = DateTime.Now
             };
         }
     }

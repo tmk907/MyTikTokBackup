@@ -7,5 +7,6 @@
         string Categories { get; }
         string Videos { get; }
         string Metadata { get; }
+        string AppLocalFolder { get; }
     }
 }

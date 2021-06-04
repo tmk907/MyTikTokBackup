@@ -39,10 +39,11 @@ namespace MyTikTokBackup.Desktop
             var nav = Ioc.Default.GetService<INavigationService>();
             nav.Register<MainPage, MainViewModel>();
             nav.Register<DownloadsPage, DownloadsViewModel>();
-            nav.Register<LibraryPage, LibraryViewModel>();
             nav.Register<SettingsPage, SettingsViewModel>();
             nav.Register<TikTokBrowserPage, TikTokBrowserViewModel>();
-            
+         
+            var helper = new Core.Database.DatabaseHelper();
+            helper.Ensure();
 
             Log.Logger = new LoggerConfiguration()
                .MinimumLevel.Debug()
@@ -76,8 +77,6 @@ namespace MyTikTokBackup.Desktop
             var services = new ServiceCollection();
 
             services.AddTransient<ICategoryRepository, CategoryRepository>();
-            services.AddTransient<IMetadataRepository, MetadataRepository>();
-            services.AddTransient<IUserVideosRepository, UserVideosRepository>();
             services.AddTransient<IImportService, ImportService>();
             services.AddSingleton<IDownloadsManager, DownloadsManager>();
             services.AddSingleton<ICategoriesService, CategoriesService>();
@@ -87,11 +86,9 @@ namespace MyTikTokBackup.Desktop
             // Services
             services.AddTransient<MainViewModel>();
             services.AddTransient<DownloadsViewModel>();
-            services.AddSingleton<LibraryViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddSingleton<TikTokBrowserViewModel>();
             services.AddTransient<IDispatcher, DispatcherHelper>();
-            //services.AddTransient<IDispatcher, Dispatcher>();
             services.AddTransient<IStorageService, StorageService>();
 
             services.AddSingleton<INavigationService, NavigationService2>();
@@ -103,18 +100,12 @@ namespace MyTikTokBackup.Desktop
         private Mapper ConfigureMapper()
         {
             var config = new MapperConfiguration(cfg => {
-                cfg.CreateMap<Core.TikTok.Video, Video>()
-                    .ForMember(x => x.Duration, opt => opt.MapFrom(src => TimeSpan.FromSeconds(src.Duration)));
-                cfg.CreateMap<Core.TikTok.Author, Author>();
-                cfg.CreateMap<Core.TikTok.Music, Music>();
-                cfg.CreateMap<Core.TikTok.Challenge, Challenge>();
-                cfg.CreateMap<Core.TikTok.Stats, Stats>();
-                cfg.CreateMap<Core.TikTok.TextExtra, TextExtra>();
-                cfg.CreateMap<Core.TikTok.AuthorStats, AuthorStats>();
-                cfg.CreateMap<Core.TikTok.ItemInfo, FullMetadata>()
-                    .ForMember(x => x.CreateTime,
-                        opt => opt.MapFrom(src => DateTimeExtensions.UnixTimeStampToDateTime(src.CreateTime)))
-                    .ForMember(x => x.Description, opt => opt.MapFrom(src => src.Desc));
+                //cfg.CreateMap<Core.TikTok.Video, Video>()
+                //    .ForMember(x => x.Duration, opt => opt.MapFrom(src => TimeSpan.FromSeconds(src.Duration)));
+                //cfg.CreateMap<Core.TikTok.ItemInfo, FullMetadata>()
+                //    .ForMember(x => x.CreateTime,
+                //        opt => opt.MapFrom(src => DateTimeExtensions.UnixTimeStampToDateTime(src.CreateTime)))
+                //    .ForMember(x => x.Description, opt => opt.MapFrom(src => src.Desc));
             });
             return new Mapper(config);
         }

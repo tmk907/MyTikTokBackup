@@ -18,6 +18,8 @@ namespace MyTikTokBackup.WindowsUWP.Services
         public string Metadata => SettingsFiles.Metadata;
         public string Videos => SettingsFiles.Videos;
 
+        public string AppLocalFolder => SettingsFiles.AppLocalFolder;
+
         private string DownloadsFolderPath => Windows.Storage.UserDataPaths.GetDefault().Downloads;
     }
 }

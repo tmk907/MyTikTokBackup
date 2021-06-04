@@ -64,7 +64,7 @@ namespace MyTikTokBackup.Core.Services
         public void Refresh()
         {
             _filePaths.Clear();
-            var files = Directory.EnumerateFiles(_appConfiguration.DownloadsFolder, "*", 
+            var files = Directory.EnumerateFiles(_appConfiguration.DownloadsFolder, "*",
                 new EnumerationOptions { RecurseSubdirectories = true });
             _filePaths.AddRange(files);
             FindIds();

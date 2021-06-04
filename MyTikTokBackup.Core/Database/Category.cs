@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MyTikTokBackup.Core.Repositories
+namespace MyTikTokBackup.Core.Database
 {
     public class Category
     {

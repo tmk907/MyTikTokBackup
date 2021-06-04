@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Windows.Input;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using MyTikTokBackup.Desktop.ViewModels;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -52,5 +52,42 @@ namespace MyTikTokBackup.Desktop.Controls
         // Using a DependencyProperty as the backing store for Categories.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty CategoriesProperty =
             DependencyProperty.Register("Categories", typeof(IList<CategoryFilter>), typeof(CategoriesFilterControl), new PropertyMetadata(null));
+    }
+
+    public class CategorySelection : ObservableObject
+    {
+        public CategorySelection(string name, string color)
+        {
+            Name = name;
+            Color = color;
+            IsSelected = true;
+        }
+
+        public CategorySelection()
+        {
+        }
+
+        protected bool isSelected;
+        public bool IsSelected
+        {
+            get { return isSelected; }
+            set { SetProperty(ref isSelected, value); }
+        }
+
+        public string Name { get; set; }
+        public string Color { get; set; }
+    }
+
+    public class CategoryFilter : CategorySelection
+    {
+        new public bool IsSelected
+        {
+            get { return isSelected; }
+            set
+            {
+                SetProperty(ref isSelected, value);
+                //StrongReferenceMessenger.Default.Send(new FilterByCategoryChangeMessage());
+            }
+        }
     }
 }

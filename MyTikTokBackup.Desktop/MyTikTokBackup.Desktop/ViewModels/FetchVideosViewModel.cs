@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using Microsoft.Toolkit.Mvvm.Messaging;
@@ -23,7 +24,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             _navigationService = navigationService;
             _downloadsManager = downloadsManager;
-            DownloadVideosCommand = new RelayCommand(() => AddVideosToDownloadQueue());
+            DownloadVideosCommand = new AsyncRelayCommand(AddVideosToDownloadQueue);
             IsActive = true;
         }
 
@@ -35,7 +36,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         }
         
         public ObservableRangeCollection<ItemInfo> Videos { get; } = new ObservableRangeCollection<ItemInfo>();
-        public RelayCommand DownloadVideosCommand { get; }
+        public IAsyncRelayCommand DownloadVideosCommand { get; }
 
         public void Receive(UserChangedMessage message)
         {
@@ -54,15 +55,15 @@ namespace MyTikTokBackup.Desktop.ViewModels
             return items;
         }
 
-        private void AddVideosToDownloadQueue()
+        private async Task AddVideosToDownloadQueue()
         {
             if (Videos.Count == 0) return;
-            AddToDownloadQueue(User, type, GetItemsWithHeaders());
+            await AddToDownloadQueue(User, type, GetItemsWithHeaders());
         }
 
-        protected void AddToDownloadQueue(string user, DownloadType type, IEnumerable<ItemInfo> items)
+        protected async Task AddToDownloadQueue(string user, DownloadType type, IEnumerable<ItemInfo> items)
         {
-            _downloadsManager.QueueVideos(user, type, items);
+            await _downloadsManager.QueueVideos(user, type, items);
             _navigationService.GoToNew(nameof(DownloadsViewModel));
         }
     }

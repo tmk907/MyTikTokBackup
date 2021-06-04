@@ -15,12 +15,21 @@ using MyTikTokBackup.Core.Messages;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.TikTok;
 using EnumsNET;
+using MyTikTokBackup.Core.Database;
+using Microsoft.Toolkit.Mvvm.DependencyInjection;
 
 namespace MyTikTokBackup.Core.Services
 {
     public record VideoSource(string UserUniqueId, string Type);
 
-    public class DownloadQueueItem
+    public interface IDownloadQueueItem
+    {
+        DownloadStatus DownloadStatus { get; }
+        VideoSource VideoSource { get; }
+        string FilePath { get; }
+    }
+
+    public class DownloadQueueItem : IDownloadQueueItem
     {
         public List<Header> Headers { get; set; }
         public string AuthorUniqueId { get; set; }
@@ -30,12 +39,14 @@ namespace MyTikTokBackup.Core.Services
         public string FilePath { get; set; }
         public VideoSource VideoSource { get; set; }
 
+        public ItemInfo ItemInfo { get; set; }
+
         private DownloadStatus downloadStatus = DownloadStatus.NotDownloaded;
         public DownloadStatus DownloadStatus
         {
             get { return downloadStatus; }
-            set 
-            { 
+            set
+            {
                 downloadStatus = value;
                 try
                 {
@@ -47,6 +58,8 @@ namespace MyTikTokBackup.Core.Services
                 }
             }
         }
+
+        public bool IsVideoDownloaded { get; set; }
 
         public static DownloadQueueItem Create(ItemInfo fav, VideoSource videoSource, string filePath, DownloadStatus downloadStatus = DownloadStatus.NotDownloaded)
         {
@@ -68,10 +81,10 @@ namespace MyTikTokBackup.Core.Services
 
     public interface IDownloadsManager
     {
-        IEnumerable<DownloadQueueItem> ItemsToDownload { get; }
+        IEnumerable<IDownloadQueueItem> ItemsToDownload { get; }
 
         void Cancel();
-        void QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items);
+        Task QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items);
     }
 
     public class DownloadsManager : IDownloadsManager
@@ -94,9 +107,9 @@ namespace MyTikTokBackup.Core.Services
         }
 
         private int downloadedCount = 0;
-        public IEnumerable<DownloadQueueItem> ItemsToDownload => _itemsToDownload.Values.ToList();
+        public IEnumerable<IDownloadQueueItem> ItemsToDownload => _itemsToDownload.Values.ToList();
 
-        public void QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items)
+        public async Task QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items)
         {
             _localVideosService.Refresh();
             var toDownload = items
@@ -109,9 +122,22 @@ namespace MyTikTokBackup.Core.Services
                 var filePath = PrepareFilePath(videoSource, item);
                 var status = GetStatus(item.Id, item.Video.PlayAddr);
                 var queueItem = DownloadQueueItem.Create(item, videoSource, filePath, status);
+                queueItem.ItemInfo = item;
+                queueItem.IsVideoDownloaded = _localVideosService.GetPath(item.Video.Id) != "";
                 _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
                 queue.Add(queueItem);
             }
+            if (type != DownloadType.Other)
+            {
+                var t = FeedType.Liked;
+                if (type == DownloadType.Posted)
+                {
+                    t = FeedType.Posted;
+                }
+                var helper = new DatabaseHelper();
+                await helper.AddOrUpdateProfileVideos(user, t, items.Select(x => x.Video.Id));
+            }
+
             Log.Information($"{nameof(QueueVideos)} items: {items.Count()}, to download: {toDownload.Count} queue {queue.Count} _itemsToDownload {_itemsToDownload.Count}");
             _downloadService.QueueItems(queue);
         }
@@ -125,11 +151,11 @@ namespace MyTikTokBackup.Core.Services
 
         private string PrepareFilePath(VideoSource videoSource, ItemInfo item)
         {
-            var videoName = $"{item.Author.UniqueId} - {item.Desc} [{item.Id}]";
+            var videoName = $"{item.Author.UniqueId} - {item.Desc} [{item.Video.Id}].mp4";
             videoName = FilePathHelper.RemoveForbiddenChars(videoName);
             var folderPath = Path.Combine(_appConfiguration.DownloadsFolder, videoSource.UserUniqueId, videoSource.Type);
             Directory.CreateDirectory(folderPath);
-            var filePath = Path.Combine(folderPath, videoName + ".mp4");
+            var filePath = Path.Combine(folderPath, videoName);
             return filePath;
         }
 
@@ -138,7 +164,6 @@ namespace MyTikTokBackup.Core.Services
             if (_localVideosService.GetPath(id) != "")
             {
                 Log.Warning($"{nameof(GetStatus)} Video id {id} is already downloaded");
-                return DownloadStatus.Downloaded;
             }
             if (string.IsNullOrEmpty(address))
             {
@@ -161,8 +186,11 @@ namespace MyTikTokBackup.Core.Services
         private ActionBlock<DownloadQueueItem> _actionBlock;
         private CancellationTokenSource cts;
 
+        private MetadataService metadataService = new MetadataService();
+        private ThumbnailsService thumbnailsService = new ThumbnailsService();
+
         public DownloadService2()
-        {
+        {            
             _client = new HttpClient();
             cts = new CancellationTokenSource();
             _queue = new BlockingCollection<DownloadQueueItem>();
@@ -194,7 +222,7 @@ namespace MyTikTokBackup.Core.Services
 
         public void QueueItems(IEnumerable<DownloadQueueItem> items)
         {
-            foreach (var item in items.Where(x => x.DownloadStatus != DownloadStatus.Downloaded))
+            foreach (var item in items)
             {
                 _queue.Add(item);
             }
@@ -212,48 +240,55 @@ namespace MyTikTokBackup.Core.Services
         {
             Log.Information($"Start download {item.VideoId} {item.Description}");
             item.DownloadStatus = DownloadStatus.Downloading;
-            var overwrite = false;
             var tempPath = item.FilePath + ".download";
             try
             {
-                if (File.Exists(item.FilePath) && !overwrite)
+                await metadataService.AddOrUpdateMetadataFromVideo(item.ItemInfo).ConfigureAwait(false);
+                await thumbnailsService.DownloadThumbnailsAsync(item.ItemInfo, cancellationToken).ConfigureAwait(false);
+
+                if (item.IsVideoDownloaded || File.Exists(item.FilePath))
                 {
                     item.DownloadStatus = DownloadStatus.Downloaded;
                     return;
                 }
-
-                var msg = new HttpRequestMessage(HttpMethod.Get, new Uri(item.PlayAddress));
-                foreach (var header in item.Headers)
-                {
-                    msg.Headers.Add(header.Name, header.Value);
-                }
-                using var response = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                response.EnsureSuccessStatusCode();
-
-                Log.Information($"Download response success {item.VideoId} {item.Description}");
-
-                using (var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    using (var fileStream = new FileStream(tempPath, FileMode.Create))
-                    {
-                        await contentStream.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
-                    }
-                }
-                var fileInfo = new FileInfo(tempPath);
-                fileInfo.MoveTo(item.FilePath);
+                
+                await DownloadVideoFile(item, tempPath, cancellationToken).ConfigureAwait(false);
                 item.DownloadStatus = DownloadStatus.Downloaded;
             }
             catch (Exception ex)
             {
-                Log.Information($"Download response error {item.VideoId} {item.Description}");
+                Log.Information($"Download error {item.VideoId} {item.Description}");
                 Log.Error(ex.ToString());
-                if (File.Exists(item.FilePath))
+                if (File.Exists(tempPath))
                 {
-                    Log.Warning($"{nameof(Download)} Delete file {item.FilePath}");
-                    File.Delete(item.FilePath);
+                    Log.Warning($"{nameof(Download)} Delete file {tempPath}");
+                    File.Delete(tempPath);
                 }
                 item.DownloadStatus = DownloadStatus.Error;
             }
+        }
+
+        private async Task DownloadVideoFile(DownloadQueueItem item, string tempPath, CancellationToken cancellationToken)
+        {
+            var msg = new HttpRequestMessage(HttpMethod.Get, new Uri(item.PlayAddress));
+            foreach (var header in item.Headers)
+            {
+                msg.Headers.Add(header.Name, header.Value);
+            }
+            var response = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+            response.EnsureSuccessStatusCode();
+
+            Log.Information($"Download response success {item.VideoId} {item.Description}");
+
+            using (var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+            {
+                using (var fileStream = new FileStream(tempPath, FileMode.Create))
+                {
+                    await contentStream.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
+                }
+            }
+            var fileInfo = new FileInfo(tempPath);
+            fileInfo.MoveTo(item.FilePath);
         }
     }
 

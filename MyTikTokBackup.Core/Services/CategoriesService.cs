@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MyTikTokBackup.Core.Database;
 using MyTikTokBackup.Core.Repositories;
 
 namespace MyTikTokBackup.Core.Services
@@ -26,7 +27,7 @@ namespace MyTikTokBackup.Core.Services
         {
             var color = await GetAvailableColor();
             var category = new Category() { Color = color, Name = name };
-            await _categoryRepository.TryAdd(category);
+            await _categoryRepository.AddOrUpdate(category);
             return category;
         }
 

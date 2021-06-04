@@ -2,44 +2,40 @@
     x:Class="MyTikTokBackup.Desktop.Controls.CategoriesFilterControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:MyTikTokBackup.Desktop.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:converters="using:MyTikTokBackup.Desktop.Converters"
-    xmlns:viewmodels="using:MyTikTokBackup.Desktop.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:MyTikTokBackup.Desktop.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <converters:ColorToBrushConverter x:Key="HexToBrushConverter"/>
-        <UniformGridLayout x:Name="UniformGridLayout" 
-                           MinRowSpacing="8"
-                           MinColumnSpacing="8"/>
-        <DataTemplate x:Key="CategoryItemTemplate" x:DataType="viewmodels:CategoryFilter">
-            <Grid 
-                CornerRadius="2"
-                Background="{Binding Color, Converter={StaticResource HexToBrushConverter}}">
+        <converters:ColorToBrushConverter x:Key="HexToBrushConverter" />
+        <UniformGridLayout
+            x:Name="UniformGridLayout"
+            MinColumnSpacing="8"
+            MinRowSpacing="8" />
+        <DataTemplate x:Key="CategoryItemTemplate" x:DataType="local:CategoryFilter">
+            <Grid Background="{Binding Color, Converter={StaticResource HexToBrushConverter}}" CornerRadius="2">
                 <CheckBox
                     MinWidth="0"
                     Margin="8,0,8,0"
                     Content="{Binding Name}"
-                    IsChecked="{Binding IsSelected, Mode=TwoWay}"/>
+                    IsChecked="{Binding IsSelected, Mode=TwoWay}" />
             </Grid>
         </DataTemplate>
     </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ItemsRepeater
             Grid.Row="0"
-            ItemsSource="{x:Bind Categories}"
             ItemTemplate="{StaticResource CategoryItemTemplate}"
-            Layout="{StaticResource UniformGridLayout}"/>
+            ItemsSource="{x:Bind Categories}"
+            Layout="{StaticResource UniformGridLayout}" />
         <StackPanel Grid.Row="1" Orientation="Horizontal">
-            <TextBox Text="{x:Bind NewCategoryName, Mode=TwoWay}"/>
-            <Button
-                Content="Add"
-                Command="{x:Bind AddCategoryCommand}"/>
+            <TextBox Text="{x:Bind NewCategoryName, Mode=TwoWay}" />
+            <Button Command="{x:Bind AddCategoryCommand}" Content="Add" />
         </StackPanel>
     </Grid>
 </UserControl>

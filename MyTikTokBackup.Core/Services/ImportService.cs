@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AutoMapper;
 using MyTikTokBackup.Core.Dto;
 using MyTikTokBackup.Core.Helpers;
-using MyTikTokBackup.Core.Repositories;
 using MyTikTokBackup.Core.TikTok;
 
 namespace MyTikTokBackup.Core.Services
@@ -14,22 +13,14 @@ namespace MyTikTokBackup.Core.Services
     public interface IImportService
     {
         Task<List<ItemInfo>> GetFavoriteItems(string filePath);
-        Task ImportFavoriteVideos(string filePath);
-        Task ImportFavoriteVideos(List<ItemInfo> favorites);
     }
 
     public class ImportService : IImportService
     {
-        private readonly IMetadataRepository _metadataRepository;
-        private readonly IUserVideosRepository _userVideosRepository;
         private readonly Mapper _mapper;
 
-        public ImportService(IMetadataRepository metadataRepository, 
-            IUserVideosRepository userVideosRepository, 
-            Mapper mapper)
+        public ImportService(Mapper mapper)
         {
-            _metadataRepository = metadataRepository;
-            _userVideosRepository = userVideosRepository;
             _mapper = mapper;
         }
         
@@ -44,26 +35,6 @@ namespace MyTikTokBackup.Core.Services
                 return GetFavoriteItemsFromHar(filePath);
             }
             else return Task.FromResult(new List<ItemInfo>());
-        }
-
-        public async Task ImportFavoriteVideos(string filePath)
-        {
-            var favorites = await GetFavoriteItems(filePath);
-            await ImportFavoriteVideos(favorites);
-        }
-
-        public async Task ImportFavoriteVideos(List<ItemInfo> favorites)
-        {
-            var metadata = await _metadataRepository.GetAll();
-            var userVideos = await _userVideosRepository.GetAll();
-
-            var newVideos = favorites.Select(x => new UserVideo
-            {
-                VideoId = x.Id,
-            });
-            var list = favorites.Select(x => _mapper.Map<FullMetadata>(x));
-            await _metadataRepository.Replace(metadata.Union(list));
-            await _userVideosRepository.Replace(userVideos.Union(newVideos));
         }
 
         private async Task<List<ItemInfo>> GetFavoriteItemsFromHar(string filePath)

@@ -42,7 +42,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
             var file = await FilePickerHelper.PickFile(new List<string>() { ".json", ".har" });
             if (file != null)
             {
-                await _importService.ImportFavoriteVideos(file.Path);
+                
             }
         }
 

@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MyTikTokBackup.Core.Helpers;
-using MyTikTokBackup.Core.Services;
+using Microsoft.EntityFrameworkCore;
+using MyTikTokBackup.Core.Database;
 
 namespace MyTikTokBackup.Core.Repositories
 {
@@ -11,58 +10,32 @@ namespace MyTikTokBackup.Core.Repositories
     {
         Task Delete(string name);
         Task<IEnumerable<Category>> GetAll();
-        Task<bool> TryAdd(Category category);
+        Task AddOrUpdate(Category category);
     }
 
     public class CategoryRepository : ICategoryRepository
     {
-        private HashSet<Category> _categories;
-        private readonly IAppConfiguration _appConfiguration;
-
-        public CategoryRepository(IAppConfiguration appConfiguration)
-        {
-            _categories = new HashSet<Category>();
-            _appConfiguration = appConfiguration;
-        }
-
         public async Task<IEnumerable<Category>> GetAll()
         {
-            await LoadIfEmpty();
-            return _categories.OrderBy(x => x.Name).ToList();
+            using var dbContext = new TikTokDbContext();
+            var categories = await dbContext.Categories.OrderBy(x => x.Name).AsNoTracking().ToListAsync();
+            return categories;
         }
 
-        private async Task LoadIfEmpty()
-        {
-            if (_categories.Count == 0)
-            {
-                _categories = (await JsonHelper.DeserializeFile<List<Category>>(_appConfiguration.Categories)).ToHashSet();
-            }
-        }
 
-        public async Task<bool> TryAdd(Category category)
+        public async Task AddOrUpdate(Category category)
         {
-            await LoadIfEmpty();
-            if (_categories.Contains(category))
-            {
-                return false;
-            }
-            else
-            {
-                _categories.Add(category);
-                await JsonHelper.SerializeFile(_appConfiguration.Categories, _categories.ToList());
-                return true;
-            }
+            using var dbContext = new TikTokDbContext();
+            dbContext.Categories.Update(category);
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(string name)
         {
-            await LoadIfEmpty();
-            var category = _categories.FirstOrDefault(x => x.Name == name);
-            if (category != null)
-            {
-                _categories.Remove(category);
-                await JsonHelper.SerializeFile(_appConfiguration.Categories, _categories.ToList());
-            }
+            using var dbContext = new TikTokDbContext();
+            var category = await dbContext.Categories.FirstOrDefaultAsync(x => x.Name == name);
+            dbContext.Categories.Remove(category);
+            await dbContext.SaveChangesAsync();
         }
     }
 }
