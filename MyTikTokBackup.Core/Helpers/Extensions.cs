@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyTikTokBackup.Core.Helpers
 {
@@ -13,6 +10,18 @@ namespace MyTikTokBackup.Core.Helpers
             DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
             return dtDateTime;
+        }
+    }
+
+    public static class DictionaryExtensions
+    {
+        public static TValue GetValueOrDefault<TKey,TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue)
+        {
+            if (dictionary.ContainsKey(key))
+            {
+                return dictionary[key];
+            }
+            return defaultValue;
         }
     }
 }

@@ -39,7 +39,7 @@ namespace MyTikTokBackup.Core.Services
                 DownloadAsync(item.Music.CoverLarge, _musicFolder, $"{item.Music.Id}-CoverLarge", cancellationToken),
                 DownloadAsync(item.Music.CoverThumb, _musicFolder, $"{item.Music.Id}-CoverThumb", cancellationToken),
                     
-                DownloadAsync(item.Video.DynamicCover, _videoFolder, $"{item.Video.Id}-DynamicCover.webp", cancellationToken),
+                //DownloadAsync(item.Video.DynamicCover, _videoFolder, $"{item.Video.Id}-DynamicCover.webp", cancellationToken),
             };
 
             await Task.WhenAll(downloadTasks).ConfigureAwait(false);

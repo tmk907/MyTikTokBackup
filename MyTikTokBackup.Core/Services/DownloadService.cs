@@ -14,9 +14,7 @@ using MyTikTokBackup.Core.Helpers;
 using MyTikTokBackup.Core.Messages;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.TikTok;
-using EnumsNET;
 using MyTikTokBackup.Core.Database;
-using Microsoft.Toolkit.Mvvm.DependencyInjection;
 
 namespace MyTikTokBackup.Core.Services
 {

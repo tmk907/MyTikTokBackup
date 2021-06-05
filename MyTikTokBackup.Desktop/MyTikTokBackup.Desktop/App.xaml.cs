@@ -41,6 +41,8 @@ namespace MyTikTokBackup.Desktop
             nav.Register<DownloadsPage, DownloadsViewModel>();
             nav.Register<SettingsPage, SettingsViewModel>();
             nav.Register<TikTokBrowserPage, TikTokBrowserViewModel>();
+            nav.Register<FoldersPage, FoldersViewModel>();
+            nav.Register<ProfileVideosPage, ProfileVideosViewModel>();
          
             var helper = new Core.Database.DatabaseHelper();
             helper.Ensure();
@@ -88,6 +90,8 @@ namespace MyTikTokBackup.Desktop
             services.AddTransient<DownloadsViewModel>();
             services.AddTransient<SettingsViewModel>();
             services.AddSingleton<TikTokBrowserViewModel>();
+            services.AddTransient<FoldersViewModel>();
+            services.AddTransient<ProfileVideosViewModel>();
             services.AddTransient<IDispatcher, DispatcherHelper>();
             services.AddTransient<IStorageService, StorageService>();
 

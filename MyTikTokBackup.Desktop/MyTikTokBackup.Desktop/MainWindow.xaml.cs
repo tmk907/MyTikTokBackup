@@ -129,10 +129,14 @@ namespace MyTikTokBackup.Desktop
             {
                 var tag = contentFrame.SourcePageType.Name;
 
-                NavView.SelectedItem = NavView.MenuItems
+                var menuItemWithTag = NavView.MenuItems
                     .OfType<NavigationViewItem>()
-                    .First(n => n.Tag.Equals(tag));
-
+                    .FirstOrDefault(n => n.Tag.Equals(tag));
+                if(menuItemWithTag is null)
+                {
+                    return;
+                }
+                NavView.SelectedItem = menuItemWithTag;
                 NavView.Header = ((NavigationViewItem)NavView.SelectedItem)?.Content?.ToString();
             }
         }

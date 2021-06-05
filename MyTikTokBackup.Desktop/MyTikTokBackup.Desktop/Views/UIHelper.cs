@@ -6,6 +6,10 @@ namespace MyTikTokBackup.Desktop.Views
     {
         public static T GetFromDataContext<T>(object sender) where T : class
         {
+            if(sender is T)
+            {
+                return sender as T;
+            }
             var element = sender as FrameworkElement;
             return element.DataContext as T;
         }

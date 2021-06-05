@@ -8,6 +8,10 @@
     <Platforms>x86;x64;arm64</Platforms>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Views\FoldersPage.xaml" />
+    <None Remove="Views\ProfileVideosPage.xaml" />
+  </ItemGroup>
 
   <ItemGroup>
 	<PackageReference Include="AutoMapper" Version="10.1.1" />
@@ -25,6 +29,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MyTikTokBackup.WindowsUWP\MyTikTokBackup.WindowsUWP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\ProfileVideosPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\FoldersPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
 </Project>

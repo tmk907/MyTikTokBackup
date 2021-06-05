@@ -7,7 +7,7 @@ using Serilog;
 
 namespace MyTikTokBackup.Core.Database
 {
-    class TikTokDbContext : DbContext
+    public class TikTokDbContext : DbContext
     {
         private static Lazy<string> appFolder = new Lazy<string>(() => Ioc.Default.GetService<IAppConfiguration>().DownloadsFolder);
 
