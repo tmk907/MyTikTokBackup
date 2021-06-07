@@ -23,11 +23,13 @@ namespace MyTikTokBackup.Desktop.ViewModels
     {
         private readonly Regex _regex;
         private readonly IAppConfiguration _appConfiguration;
+        private readonly IDispatcher _dispatcher;
 
-        public ProfileVideosViewModel(IAppConfiguration appConfiguration)
+        public ProfileVideosViewModel(IAppConfiguration appConfiguration, IDispatcher dispatcher)
         {
             _regex = new Regex(@"\[(\w)+\]", RegexOptions.Compiled);
             _appConfiguration = appConfiguration;
+            _dispatcher = dispatcher;
         }
 
         public ObservableRangeCollection<VideoUI> PostedVideos { get; } = new ObservableRangeCollection<VideoUI>();
@@ -44,8 +46,8 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
         public async Task LoadAllVideos()
         {
-            await LoadPostedVideos();
-            await LoadLikedVideos();
+            await Task.Run(() => LoadLikedVideos());
+            await Task.Run(() => LoadPostedVideos());
         }
 
         public async Task LoadLikedVideos()
@@ -69,14 +71,17 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 likedIdToPath.TryAdd(id, path);
             }
 
-            foreach (var item in profileLikedVideos)
+            _dispatcher.Run(() =>
             {
-                LikedVideos.Add(new VideoUI
+                foreach (var item in profileLikedVideos)
                 {
-                    Video = item.Video,
-                    FilePath = likedIdToPath.GetValueOrDefault(item.Video.VideoId, "")
-                });
-            }
+                    LikedVideos.Add(new VideoUI
+                    {
+                        Video = item.Video,
+                        FilePath = likedIdToPath.GetValueOrDefault(item.Video.VideoId, "")
+                    });
+                }
+            });
         }
 
         public async Task LoadPostedVideos()
@@ -99,15 +104,18 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 var id = GetId(path);
                 postedIdToPath.TryAdd(id, path);
             }
-            
-            foreach (var item in profilePostedVideos)
+
+            _dispatcher.Run(() =>
             {
-                PostedVideos.Add(new VideoUI
+                foreach (var item in profilePostedVideos)
                 {
-                    Video = item.Video,
-                    FilePath = postedIdToPath.GetValueOrDefault(item.Video.VideoId, "")
-                });
-            }
+                    PostedVideos.Add(new VideoUI
+                    {
+                        Video = item.Video,
+                        FilePath = postedIdToPath.GetValueOrDefault(item.Video.VideoId, "")
+                    });
+                }
+            });
         }
 
         private string GetId(string path)

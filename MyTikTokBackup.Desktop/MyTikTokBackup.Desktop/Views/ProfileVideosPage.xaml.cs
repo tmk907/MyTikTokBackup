@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Win32.SafeHandles;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Desktop.ViewModels;
 using Windows.Foundation;
@@ -37,6 +38,17 @@ namespace MyTikTokBackup.Desktop.Views
             this.InitializeComponent();
             this.Loaded += ProfileVideosPage_Loaded;
             webView.Loaded += WebView_Loaded;
+            this.Unloaded += ProfileVideosPage_Unloaded;
+        }
+
+        private void ProfileVideosPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            var html = @$"
+<html>
+	<body>
+	</body>
+</html>";
+            webView.NavigateToString(html);
         }
 
         private bool loaded = false;
@@ -64,16 +76,34 @@ namespace MyTikTokBackup.Desktop.Views
             await VM.LoadAllVideos();
         }
 
-        private void Videos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void PostedVideos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var video = (VideoUI)e.AddedItems.FirstOrDefault();
             if (video == null) return;
-            var s1 = video.FilePath.Replace(Path.Combine(downloadsFolderPath, VM.UserUniqueId, "Favorite"), "").Replace("\\", "");
-            var videoUrl = Uri.EscapeDataString(s1);
-            //string videoUrl = .Replace("#", "%23").Replace(" ", "%20"); ;
-            var address = $"http://{hostName}/{VM.UserUniqueId}/Favorite/{videoUrl}";
-            var a = new Uri(address);
+            var address = FilePathToAddress(video.FilePath, "Posted");
+            VideoChanged(address);
+        }
 
+
+        private void LikedVideos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var video = (VideoUI)e.AddedItems.FirstOrDefault();
+            if (video == null) return;
+            var address = FilePathToAddress(video.FilePath, "Favorite");
+            VideoChanged(address);
+        }
+
+        private string FilePathToAddress(string filePath, string type)
+        {
+            var fileName = Path.GetFileName(filePath);
+            var videoUrl = Uri.EscapeDataString(fileName);
+            //string videoUrl = .Replace("#", "%23").Replace(" ", "%20"); ;
+            var address = $"http://{hostName}/{VM.UserUniqueId}/{type}/{videoUrl}";
+            return address;
+        }
+
+        private void VideoChanged(string address)
+        {
             var html = @$"
 <html>
 	<body>
@@ -89,6 +119,18 @@ namespace MyTikTokBackup.Desktop.Views
 </style>";
 
             webView.NavigateToString(html);
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            likedLV.Visibility = Visibility.Collapsed;
+            postedLV.Visibility = Visibility.Visible;
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            postedLV.Visibility = Visibility.Collapsed;
+            likedLV.Visibility = Visibility.Visible;
         }
     }
 }
