@@ -14,6 +14,8 @@ using System.IO;
 using System.Threading.Tasks;
 using Serilog.Core;
 using Windows.Storage.Streams;
+using Flurl;
+using Flurl.Http;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -47,6 +49,9 @@ namespace MyTikTokBackup.Desktop.Views
             webview.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
             webview.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             webview.CoreWebView2.HistoryChanged += CoreWebView2_HistoryChanged;
+
+            webview.CoreWebView2.CookieManager.DeleteAllCookies();
+
             webview.Source = new Uri(ViewModel.StartAddress);
             isLoaded = true;
         }
@@ -68,6 +73,9 @@ namespace MyTikTokBackup.Desktop.Views
             WeakReferenceMessenger.Default.Send(new AddressChangedMessage(user));
         }
 
+        string lastUser = "";
+        private List<ItemInfo> pageVideos = new List<ItemInfo>();
+
         private async void CoreWebView2_WebResourceResponseReceived(CoreWebView2 sender, CoreWebView2WebResourceResponseReceivedEventArgs args)
         {
             var uri = args.Request.Uri;
@@ -86,6 +94,53 @@ namespace MyTikTokBackup.Desktop.Views
                 Log.Information($"Set Cookie {ViewModel.FindFollowingVM.CookieHeader}");
             }
 
+            if (uri.Contains("tiktok.com/@") && args.Response.StatusCode == 200)
+            {
+                Log.Information("Html content");
+                Log.Information(uri);
+                try
+                {
+                    var contentStream = await args.Response.GetContentAsync();
+                    using (StreamReader sr = new StreamReader(contentStream.AsStreamForRead()))
+                    {
+                        var text = await sr.ReadToEndAsync();
+                        var indexOfVideoData = text.IndexOf("\"videoData\":");
+                        var prev = text.Substring(indexOfVideoData, 100);
+                        if (indexOfVideoData > 0)
+                        {
+                            var firstBracket = text.IndexOf('[', indexOfVideoData);
+                            int count = 1;
+                            int lastBracket = 0;
+                            for(int i=firstBracket+1; i < text.Length; i++)
+                            {
+                                if(text[i] == '[')
+                                {
+                                    count++;
+                                }
+                                if(text[i] == ']')
+                                {
+                                    count--;
+                                }
+                                if (count == 0)
+                                {
+                                    lastBracket = i;
+                                    break;
+                                }
+                            }
+                            if (lastBracket != 0)
+                            {
+                                var videoData = text.Substring(firstBracket, lastBracket - firstBracket + 1);
+                                pageVideos = JsonConvert.DeserializeObject<List<ItemInfo>>(videoData);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
+
             if (uri.Contains("api/post/item_list"))
             {
                 if (Flurl.Url.Parse(uri).QueryParams.TryGetFirst("cursor", out var cursor))
@@ -94,6 +149,8 @@ namespace MyTikTokBackup.Desktop.Views
                     Log.Information($"Posted {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
 
                     ViewModel.FetchPostedVideosVM.Headers = GetHeaders(args.Request.Headers);
+                    ViewModel.FetchPostedVideosVM.Videos.AddRange(pageVideos.Except(ViewModel.FetchPostedVideosVM.Videos));
+                    pageVideos.Clear();
                     var videos = await GetVideosFromResponseAsync(args.Response);
                     ViewModel.FetchPostedVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchPostedVideosVM.Videos));
                 }
@@ -106,6 +163,8 @@ namespace MyTikTokBackup.Desktop.Views
                     Log.Information($"Favorites {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
                     
                     ViewModel.FetchFavoriteVideosVM.Headers = GetHeaders(args.Request.Headers);
+                    ViewModel.FetchFavoriteVideosVM.Videos.AddRange(pageVideos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
+                    pageVideos.Clear();
                     var videos = await GetVideosFromResponseAsync(args.Response);
                     ViewModel.FetchFavoriteVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
                 }
