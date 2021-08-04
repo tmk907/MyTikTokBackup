@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Microsoft.System;
 using MyTikTokBackup.Core.Services;
 using Microsoft.Toolkit.Uwp.Extensions;
 using Serilog;
+using Microsoft.UI.Dispatching;
 
 namespace MyTikTokBackup.Desktop.Services
 {

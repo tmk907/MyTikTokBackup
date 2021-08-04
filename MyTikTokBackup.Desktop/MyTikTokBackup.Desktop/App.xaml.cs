@@ -5,18 +5,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Toolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using MyTikTokBackup.Core.Services;
-using MyTikTokBackup.Core.Helpers;
 using MyTikTokBackup.Core.Repositories;
 using MyTikTokBackup.Desktop.Services;
 using MyTikTokBackup.Desktop.ViewModels;
 using MyTikTokBackup.Desktop.Views;
-using Windows.ApplicationModel;
 using WinRT;
 using MyTikTokBackup.WindowsUWP.Services;
 using MyTikTokBackup.WindowsUWP.Helpers;
 using Serilog;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
