@@ -2,37 +2,40 @@
     x:Class="MyTikTokBackup.Desktop.Views.TikTokBrowserPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:MyTikTokBackup.Desktop.Views"
+    xmlns:core="using:Microsoft.Xaml.Interactions.Core"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:local="using:MyTikTokBackup.Desktop.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="using:MyTikTokBackup.Core.TikTok"
     xmlns:viewmodels="using:MyTikTokBackup.Desktop.ViewModels"
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
-    xmlns:core="using:Microsoft.Xaml.Interactions.Core"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     NavigationCacheMode="Required"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
 
     <Page.Resources>
         <Style TargetType="StackPanel">
-            <Setter Property="Spacing" Value="2"/>
+            <Setter Property="Spacing" Value="2" />
         </Style>
     </Page.Resources>
     <Grid ColumnSpacing="4">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition />
+            <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        
+
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,2">
-                <Button  Click="Refresh_Click">
+            <StackPanel
+                Grid.Row="0"
+                Margin="0,0,0,2"
+                Orientation="Horizontal">
+                <Button Click="Refresh_Click">
                     <Button.Content>
-                        <SymbolIcon Symbol="Refresh"/>
+                        <SymbolIcon Symbol="Refresh" />
                     </Button.Content>
                 </Button>
                 <Button Click="Previous_Click">
@@ -45,65 +48,69 @@
                         <SymbolIcon Symbol="Forward" />
                     </Button.Content>
                 </Button>
-                <ToggleButton 
-                    Content="Mobile"
-                    IsChecked="{x:Bind ViewModel.UseMobileVersion, Mode=TwoWay}"/>
-                <AutoSuggestBox 
-                    PlaceholderText="Search user"
-                    QueryIcon="Find"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
+                <ToggleButton Content="Mobile" IsChecked="{x:Bind ViewModel.UseMobileVersion, Mode=TwoWay}" />
+                <Button Click="ClearCookies_Click">
+                    <Button.Content>
+                        <SymbolIcon Symbol="Clear" />
+                    </Button.Content>
+                </Button>
+                <AutoSuggestBox
                     MinWidth="250"
                     MaxWidth="400"
-                    HorizontalAlignment="Stretch" 
-                    VerticalAlignment="Center"/>
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Center"
+                    PlaceholderText="Search user"
+                    QueryIcon="Find"
+                    QuerySubmitted="AutoSuggestBox_QuerySubmitted" />
             </StackPanel>
             <InfoBar
                 x:Name="infoBar"
+                Title="Favorites"
                 Grid.Row="0"
-                VerticalAlignment="Top"
                 HorizontalAlignment="Center"
-                Title="Favorites"/>
+                VerticalAlignment="Top" />
             <Border
                 Grid.Row="1"
+                BorderBrush="LightGray"
                 BorderThickness="1"
-                CornerRadius="4"
-                BorderBrush="LightGray">
+                CornerRadius="4">
                 <WebView2
                     x:Name="webview"
                     HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"/>
+                    VerticalAlignment="Stretch" />
             </Border>
         </Grid>
         <Grid Grid.Column="1" Padding="8,0,8,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition/>
+                <RowDefinition Height="Auto" />
+                <RowDefinition />
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Style="{StaticResource SubtitleTextBlockStyle}">
-                    <Run Text="{x:Bind ViewModel.BookmarksVM.CurrentUser, Mode=OneWay}"/>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Style="{StaticResource SubtitleTextBlockStyle}">
+                    <Run Text="{x:Bind ViewModel.BookmarksVM.CurrentUser, Mode=OneWay}" />
                 </TextBlock>
                 <StackPanel Orientation="Horizontal">
-                    <Button Click="{x:Bind ViewModel.BookmarksVM.AddToBookmarks}"
-                        ToolTipService.ToolTip="Add to bookmarks">
+                    <Button Click="{x:Bind ViewModel.BookmarksVM.AddToBookmarks}" ToolTipService.ToolTip="Add to bookmarks">
                         <Button.Content>
                             <SymbolIcon Symbol="AddFriend" />
                         </Button.Content>
                     </Button>
-                    <Button Click="{x:Bind ViewModel.BookmarksVM.RemoveFromBookmarks}"
-                        ToolTipService.ToolTip="Remove from bookmarks">
+                    <Button Click="{x:Bind ViewModel.BookmarksVM.RemoveFromBookmarks}" ToolTipService.ToolTip="Remove from bookmarks">
                         <Button.Content>
                             <SymbolIcon Symbol="Remove" />
                         </Button.Content>
                     </Button>
-                    <ComboBox 
-                    PlaceholderText="Favorites" 
-                    ItemsSource="{x:Bind ViewModel.BookmarksVM.Bookmarks}"
-                    SelectionChanged="ComboBox_SelectionChanged"
-                    Width="200">
+                    <ComboBox
+                        Width="200"
+                        ItemsSource="{x:Bind ViewModel.BookmarksVM.Bookmarks}"
+                        PlaceholderText="Favorites"
+                        SelectionChanged="ComboBox_SelectionChanged">
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="viewmodels:Bookmark">
-                                <TextBlock Text="{x:Bind User}"/>
+                                <TextBlock Text="{x:Bind User}" />
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
@@ -112,65 +119,64 @@
             <StackPanel Grid.Row="1" Margin="0,12,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Posted videos" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Posted videos" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center">
-                        <Span>Found</Span>
-                            <Run Text="{x:Bind ViewModel.FetchPostedVideosVM.Videos.Count, Mode=OneWay}"></Run>
-                        <Span>videos</Span>
+                                <Span>Found</Span>
+                                <Run Text="{x:Bind ViewModel.FetchPostedVideosVM.Videos.Count, Mode=OneWay}" />
+                                <Span>videos</Span>
                             </TextBlock>
                         </StackPanel>
                         <Button
-                    Content="Download" 
-                    Command="{x:Bind ViewModel.FetchPostedVideosVM.DownloadVideosCommand}"
-                    Width="90"/>
+                            Width="90"
+                            Command="{x:Bind ViewModel.FetchPostedVideosVM.DownloadVideosCommand}"
+                            Content="Download" />
                     </StackPanel>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="Favorite videos" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Favorite videos" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center">
-                        <Span>Found</Span>
-                            <Run Text="{x:Bind ViewModel.FetchFavoriteVideosVM.Videos.Count, Mode=OneWay}"></Run>
-                        <Span>videos</Span>
+                                <Span>Found</Span>
+                                <Run Text="{x:Bind ViewModel.FetchFavoriteVideosVM.Videos.Count, Mode=OneWay}" />
+                                <Span>videos</Span>
                             </TextBlock>
                         </StackPanel>
                         <Button
-                    Content="Download" 
-                    Command="{x:Bind ViewModel.FetchFavoriteVideosVM.DownloadVideosCommand}"
-                    Width="90"/>
+                            Width="90"
+                            Command="{x:Bind ViewModel.FetchFavoriteVideosVM.DownloadVideosCommand}"
+                            Content="Download" />
                     </StackPanel>
                 </Grid>
 
                 <StackPanel Margin="0,12,0,0">
-                    <TextBlock Text="My following" Style="{StaticResource SubtitleTextBlockStyle}"/>
-                    <TextBlock Text="* Login and switch to following tab" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="My following" />
+                    <TextBlock
+                        Margin="0,0,0,4"
+                        FontSize="12"
+                        Text="* Login and switch to following tab" />
                     <StackPanel Orientation="Horizontal">
-                        <Button 
-                Content="Find"
-                Visibility="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand.IsRunning, Mode=OneWay, Converter={StaticResource VisibilityNegationConverter}}"
-                Command="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand}"/>
                         <Button
-                    Content="Cancel" 
-                    Visibility="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand.IsRunning, Mode=OneWay, Converter={StaticResource VisibiliyConverter}}"
-                    Click="{x:Bind ViewModel.FindFollowingVM.CancelFindFollowing}"
-                    Width="60"/>
-                        <ProgressRing IsActive="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand.IsRunning, Mode=OneWay}"/>
+                            Command="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand}"
+                            Content="Find"
+                            Visibility="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand.IsRunning, Mode=OneWay, Converter={StaticResource VisibilityNegationConverter}}" />
+                        <Button
+                            Width="60"
+                            Click="{x:Bind ViewModel.FindFollowingVM.CancelFindFollowing}"
+                            Content="Cancel"
+                            Visibility="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand.IsRunning, Mode=OneWay, Converter={StaticResource VisibiliyConverter}}" />
+                        <ProgressRing IsActive="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand.IsRunning, Mode=OneWay}" />
                         <TextBlock VerticalAlignment="Center">
-                    <Span>Found</Span>
-                    <Run Text="{x:Bind ViewModel.FindFollowingVM.Users.Count, Mode=OneWay}"></Run>
-                    <Span>users</Span>
+                            <Span>Found</Span>
+                            <Run Text="{x:Bind ViewModel.FindFollowingVM.Users.Count, Mode=OneWay}" />
+                            <Span>users</Span>
                         </TextBlock>
                     </StackPanel>
-                    <ComboBox
-                ItemsSource="{x:Bind ViewModel.FindFollowingVM.Users}"
-                SelectionChanged="FollowingComboBox_SelectionChanged"/>
-                    <Button
-                Content="Add all to bookmarks"
-                Click="{x:Bind ViewModel.AddAllFollowingToBookmarks}"/>
+                    <ComboBox ItemsSource="{x:Bind ViewModel.FindFollowingVM.Users}" SelectionChanged="FollowingComboBox_SelectionChanged" />
+                    <Button Click="{x:Bind ViewModel.AddAllFollowingToBookmarks}" Content="Add all to bookmarks" />
                 </StackPanel>
             </StackPanel>
         </Grid>

@@ -38,6 +38,8 @@ namespace MyTikTokBackup.Desktop.Views
         }
 
         private string mobileUserAgent = "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Mobile Safari/537.36";
+        // "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Mobile Safari/537.36";
+        // "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Mobile Safari/537.36";
         private bool isLoaded = false;
         private async void Webview_Loaded(object sender, RoutedEventArgs e)
         {
@@ -50,7 +52,7 @@ namespace MyTikTokBackup.Desktop.Views
             webview.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             webview.CoreWebView2.HistoryChanged += CoreWebView2_HistoryChanged;
 
-            webview.CoreWebView2.CookieManager.DeleteAllCookies();
+            //webview.CoreWebView2.CookieManager.DeleteAllCookies();
 
             webview.Source = new Uri(ViewModel.StartAddress);
             isLoaded = true;
@@ -286,6 +288,11 @@ namespace MyTikTokBackup.Desktop.Views
                 var url = $"https://www.tiktok.com/@{selected}";
                 webview.Source = new Uri(url);
             }
+        }
+
+        private void ClearCookies_Click(object sender, RoutedEventArgs e)
+        {
+            webview.CoreWebView2.CookieManager.DeleteAllCookies();
         }
     }
 }
