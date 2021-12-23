@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31025.218
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTikTokBackup.Core", "MyTikTokBackup.Core\MyTikTokBackup.Core.csproj", "{6728B1BC-0EB3-4BB6-AE47-E49B30156C16}"
 EndProject
@@ -11,7 +11,7 @@ Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "MyTikTokBackup.Desktop (Pac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTikTokBackup.Desktop", "MyTikTokBackup.Desktop\MyTikTokBackup.Desktop\MyTikTokBackup.Desktop.csproj", "{B77D8CAF-16B0-48A4-B6C2-9A8631C70086}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyTikTokBackup.Tests", "MyTikTokBackup.Tests\MyTikTokBackup.Tests.csproj", "{52338567-3774-4BC1-8853-E4F50D7ABAC8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTikTokBackup.Tests", "MyTikTokBackup.Tests\MyTikTokBackup.Tests.csproj", "{52338567-3774-4BC1-8853-E4F50D7ABAC8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
