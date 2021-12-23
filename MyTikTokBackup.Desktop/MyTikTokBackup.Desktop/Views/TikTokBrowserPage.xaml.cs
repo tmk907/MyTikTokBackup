@@ -145,31 +145,25 @@ namespace MyTikTokBackup.Desktop.Views
 
             if (uri.Contains("api/post/item_list"))
             {
-                if (Flurl.Url.Parse(uri).QueryParams.TryGetFirst("cursor", out var cursor))
-                {
-                    Log.Information($"Posted {uri}");
-                    Log.Information($"Posted {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
+                Log.Information($"Posted {uri}");
+                Log.Information($"Posted {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
 
-                    ViewModel.FetchPostedVideosVM.Headers = GetHeaders(args.Request.Headers);
-                    ViewModel.FetchPostedVideosVM.Videos.AddRange(pageVideos.Except(ViewModel.FetchPostedVideosVM.Videos));
-                    pageVideos.Clear();
-                    var videos = await GetVideosFromResponseAsync(args.Response);
-                    ViewModel.FetchPostedVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchPostedVideosVM.Videos));
-                }
+                ViewModel.FetchPostedVideosVM.Headers = GetHeaders(args.Request.Headers);
+                ViewModel.FetchPostedVideosVM.Videos.AddRange(pageVideos.Except(ViewModel.FetchPostedVideosVM.Videos));
+                pageVideos.Clear();
+                var videos = await GetVideosFromResponseAsync(args.Response);
+                ViewModel.FetchPostedVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchPostedVideosVM.Videos));
             }
             else if (uri.Contains("api/favorite/item_list"))
             {
-                if (Flurl.Url.Parse(uri).QueryParams.TryGetFirst("cursor", out var cursor))
-                {
-                    Log.Information($"Favorites {uri}");
-                    Log.Information($"Favorites {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
+                Log.Information($"Favorites {uri}");
+                Log.Information($"Favorites {string.Join(" ", args.Request.Headers.Select(x => $"{x.Key}: {x.Value}"))}");
                     
-                    ViewModel.FetchFavoriteVideosVM.Headers = GetHeaders(args.Request.Headers);
-                    ViewModel.FetchFavoriteVideosVM.Videos.AddRange(pageVideos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
-                    pageVideos.Clear();
-                    var videos = await GetVideosFromResponseAsync(args.Response);
-                    ViewModel.FetchFavoriteVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
-                }
+                ViewModel.FetchFavoriteVideosVM.Headers = GetHeaders(args.Request.Headers);
+                ViewModel.FetchFavoriteVideosVM.Videos.AddRange(pageVideos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
+                pageVideos.Clear();
+                var videos = await GetVideosFromResponseAsync(args.Response);
+                ViewModel.FetchFavoriteVideosVM.Videos.AddRange(videos.Except(ViewModel.FetchFavoriteVideosVM.Videos));
             }
         }
 
