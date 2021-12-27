@@ -75,7 +75,6 @@ namespace MyTikTokBackup.Desktop
             var services = new ServiceCollection();
 
             services.AddTransient<ICategoryRepository, CategoryRepository>();
-            services.AddTransient<IImportService, ImportService>();
             services.AddSingleton<IDownloadsManager, DownloadsManager>();
             services.AddSingleton<ICategoriesService, CategoriesService>();
             services.AddSingleton<ILocalVideosService, LocalVideosService>();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
@@ -10,18 +9,15 @@ namespace MyTikTokBackup.Desktop.ViewModels
 {
     public class SettingsViewModel : ObservableObject
     {
-        private readonly IImportService _importService;
         private readonly IAppConfiguration _appConfiguration;
         private readonly ILocalVideosService _localVideosService;
 
-        public SettingsViewModel(IImportService importService, IAppConfiguration appConfiguration,
+        public SettingsViewModel(IAppConfiguration appConfiguration,
             ILocalVideosService localVideosService)
         {
-            _importService = importService;
             _appConfiguration = appConfiguration;
             _localVideosService = localVideosService;
             DownloadsFolderPath = appConfiguration.DownloadsFolder;
-            ImportFavoriteVideosCommand = new AsyncRelayCommand(ImportFavoriteVideos);
             ChooseDownloadsFolderCommand = new AsyncRelayCommand(ChooseDownloadsFolder);
         }
 
@@ -34,17 +30,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         }
 
 
-        public IAsyncRelayCommand ImportFavoriteVideosCommand { get; }
         public IAsyncRelayCommand ChooseDownloadsFolderCommand { get; }
-
-        private async Task ImportFavoriteVideos()
-        {
-            var file = await FilePickerHelper.PickFile(new List<string>() { ".json", ".har" });
-            if (file != null)
-            {
-                
-            }
-        }
 
         private async Task ChooseDownloadsFolder()
         {

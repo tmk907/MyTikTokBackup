@@ -10,12 +10,6 @@
 
     <Grid>
         <StackPanel>
-            <Button
-                Content="Import favorite videos"
-                Command="{x:Bind ViewModel.ImportFavoriteVideosCommand}"/>
-            <ProgressRing
-                IsActive="{x:Bind ViewModel.ImportFavoriteVideosCommand.IsRunning}"/>
-
             <TextBlock 
                 Text="{x:Bind ViewModel.DownloadsFolderPath, Mode=OneWay}"/>
             <Button
