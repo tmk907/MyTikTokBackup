@@ -64,7 +64,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         protected async Task AddToDownloadQueue(string user, DownloadType type, IEnumerable<ItemInfo> items)
         {
             await _downloadsManager.QueueVideos(user, type, items);
-            _navigationService.GoToNew(nameof(DownloadsViewModel));
+            //_navigationService.GoToNew(nameof(DownloadsViewModel));
         }
     }
 
