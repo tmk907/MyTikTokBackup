@@ -43,7 +43,7 @@ namespace MyTikTokBackup.Desktop.Views
         private void ListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             var nav = Ioc.Default.GetService<INavigationService>();
-            var uniqueId = UIHelper.GetFromDataContext<UserFolder>(e.ClickedItem).UniqueId;
+            var uniqueId = UIHelper.GetDataContext<UserFolder>(e.ClickedItem).UniqueId;
             nav.GoToNew(nameof(ProfileVideosViewModel), new Dictionary<string, string>() { { "user", uniqueId } });
         }
     }

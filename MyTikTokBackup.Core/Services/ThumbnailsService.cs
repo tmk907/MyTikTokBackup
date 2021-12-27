@@ -31,7 +31,9 @@ namespace MyTikTokBackup.Core.Services
 
         public async Task DownloadThumbnailsAsync(ItemInfo item, CancellationToken cancellationToken)
         {
-            var downloadTasks = new[] {
+            try
+            {
+                var downloadTasks = new[] {
                 DownloadAsync(item.Author.AvatarLarger, _authorFolder, $"{item.Author.Id}-AvatarLarger{GetExtension(item.Author.AvatarLarger)}", cancellationToken),
                 DownloadAsync(item.Author.AvatarThumb, _authorFolder, $"{item.Author.Id}-AvatarThumb{GetExtension(item.Author.AvatarThumb)}", cancellationToken),
 
@@ -42,7 +44,12 @@ namespace MyTikTokBackup.Core.Services
                 //DownloadAsync(item.Video.DynamicCover, _videoFolder, $"{item.Video.Id}-DynamicCover.webp", cancellationToken),
             };
 
-            await Task.WhenAll(downloadTasks).ConfigureAwait(false);
+                await Task.WhenAll(downloadTasks).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
         }
 
         private async Task DownloadAsync(string url, string folderPath, string filename, CancellationToken cancellationToken)

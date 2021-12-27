@@ -20,7 +20,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         public FetchFavoriteVideosViewModel FetchFavoriteVideosVM { get; }
         public FindFollowingViewModel FindFollowingVM { get; }
 
-        private bool useMobileVersion = true;
+        private bool useMobileVersion = false;
         public bool UseMobileVersion
         {
             get { return useMobileVersion; }

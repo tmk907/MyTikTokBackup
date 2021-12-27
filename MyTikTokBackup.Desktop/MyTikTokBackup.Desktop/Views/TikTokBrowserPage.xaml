@@ -20,8 +20,8 @@
     </Page.Resources>
     <Grid ColumnSpacing="4">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0">
@@ -118,11 +118,11 @@
             </StackPanel>
             <StackPanel Grid.Row="1" Margin="0,12,0,0">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0">
                         <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Posted videos" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center">
@@ -136,7 +136,7 @@
                             Command="{x:Bind ViewModel.FetchPostedVideosVM.DownloadVideosCommand}"
                             Content="Download" />
                     </StackPanel>
-                    <StackPanel Grid.Column="1">
+                    <StackPanel Grid.Row="1">
                         <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Favorite videos" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center">

@@ -4,7 +4,7 @@ namespace MyTikTokBackup.Desktop.Views
 {
     public static class UIHelper
     {
-        public static T GetFromDataContext<T>(object sender) where T : class
+        public static T GetDataContext<T>(object sender) where T : class
         {
             if(sender is T)
             {

@@ -35,7 +35,7 @@ namespace MyTikTokBackup.Desktop.Views
 
         private async void OpenFolder_Click(object sender, RoutedEventArgs e)
         {
-            var item = UIHelper.GetFromDataContext<UserQueueState>(sender);
+            var item = UIHelper.GetDataContext<UserQueueState>(sender);
             await ViewModel.OpenFolder(item);
         }
     }

@@ -12,10 +12,8 @@ using MyTikTokBackup.Desktop.ViewModels;
 using Newtonsoft.Json;
 using System.IO;
 using System.Threading.Tasks;
-using Serilog.Core;
 using Windows.Storage.Streams;
-using Flurl;
-using Flurl.Http;
+using MyTikTokBackup.Core.TikTok.Website;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -37,25 +35,167 @@ namespace MyTikTokBackup.Desktop.Views
             webview.Loaded += Webview_Loaded;
         }
 
-        private string mobileUserAgent = "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Mobile Safari/537.36";
-        // "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Mobile Safari/537.36";
-        // "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Mobile Safari/537.36";
+        private string mobileUserAgent = "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Mobile Safari/537.36";
+        // Pixel2
+        // "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Mobile Safari/537.36";
         private bool isLoaded = false;
         private async void Webview_Loaded(object sender, RoutedEventArgs e)
         {
             if (isLoaded) return;
             await webview.EnsureCoreWebView2Async();
-            //TODO
-            //webview.CoreWebView2.Settings.UserAgent = mobileUserAgent;
             webview.CoreWebView2.WebResourceResponseReceived += CoreWebView2_WebResourceResponseReceived;
             webview.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
             webview.CoreWebView2.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             webview.CoreWebView2.HistoryChanged += CoreWebView2_HistoryChanged;
+            webview.CoreWebView2.NavigationCompleted += CoreWebView2_NavigationCompleted;
+
+            //webview.CoreWebView2.DOMContentLoaded += CoreWebView2_DOMContentLoaded;
+            //webview.CoreWebView2.Settings.IsWebMessageEnabled = true;
+            //webview.CoreWebView2.WebMessageReceived += CoreWebView2_WebMessageReceived;
 
             //webview.CoreWebView2.CookieManager.DeleteAllCookies();
 
             webview.Source = new Uri(ViewModel.StartAddress);
             isLoaded = true;
+        }
+
+        private async void CoreWebView2_WebMessageReceived(CoreWebView2 sender, CoreWebView2WebMessageReceivedEventArgs args)
+        {
+            Log.Information("WebMessageReceived");
+            if (System.Text.Json.JsonSerializer.Deserialize<string>(args.WebMessageAsJson) == "favClicked")
+            {
+                await TryParseUserVideos();
+            }
+        }
+
+        private async void CoreWebView2_DOMContentLoaded(CoreWebView2 sender, CoreWebView2DOMContentLoadedEventArgs args)
+        {
+            Log.Information("DOMContentLoaded");
+            var notifyWhenLikedTabClickedJS = @"
+            var tabs = document.evaluate( ""//*[@data-e2e='liked-tab']"", document, null, XPathResult.ANY_TYPE, null);
+            var tab = tabs.iterateNext();
+            tab.addEventListener('click', function(){ window.chrome.webview.postMessage('favClicked'); }, false);";
+            await webview.CoreWebView2.ExecuteScriptAsync(notifyWhenLikedTabClickedJS);
+        }
+
+        private async void CoreWebView2_NavigationCompleted(CoreWebView2 sender, CoreWebView2NavigationCompletedEventArgs args)
+        {
+            Log.Information("NavigationCompleted");
+            await TryParseUserVideos();
+        }
+
+        private async Task TryParseUserVideos()
+        {
+            try
+            {
+                var getPreloadedPostedVideosJS = "window['SIGI_STATE'].ItemList['user-post']['list']";
+                var videos = await FindVideos(getPreloadedPostedVideosJS);
+                ViewModel.FetchPostedVideosVM.Videos
+                    .AddRange(videos
+                        .Select(x => new ItemInfo
+                        {
+                            Author = new Author
+                            {
+                                Id = x.AuthorId,
+                                Nickname = x.Nickname,
+                                SecUid = x.AuthorSecId,
+                                UniqueId = x.Author,
+                                Signature = ""
+                            },
+                            AuthorStats = new Core.TikTok.AuthorStats
+                            {
+                                DiggCount = x.AuthorStats.DiggCount,
+                                FollowerCount = x.AuthorStats.FollowerCount,
+                                FollowingCount = x.AuthorStats.FollowingCount,
+                                Heart = x.AuthorStats.Heart,
+                                HeartCount = x.AuthorStats.HeartCount,
+                                VideoCount = x.AuthorStats.VideoCount
+                            },
+                            Desc = x.Desc,
+                            Id = x.Id,
+                            Music = new Core.TikTok.Music
+                            {
+                                Album = x.Music.Album,
+                                AuthorName = x.Music.AuthorName,
+                                CoverLarge = x.Music.CoverLarge,
+                                CoverMedium = x.Music.CoverMedium,
+                                CoverThumb = x.Music.CoverThumb,
+                                Duration = x.Music.Duration,
+                                Id = x.Music.Id,
+                                Original = x.Music.Original,
+                                PlayUrl = x.Music.PlayUrl,
+                                Title = x.Music.Title
+                            },
+                            Stats = new Core.TikTok.Stats
+                            {
+                                CommentCount = x.Stats.CommentCount,
+                                DiggCount = x.Stats.DiggCount,
+                                PlayCount = x.Stats.PlayCount,
+                                ShareCount = x.Stats.ShareCount
+                            },
+                            TextExtra = x.TextExtra.Select(x => new Core.TikTok.TextExtra
+                            {
+                                AwemeId = x.AwemeId,
+                                End = x.End,
+                                HashtagId = x.HashtagId,
+                                HashtagName = x.HashtagName,
+                                UserId = x.UserId,
+                                UserUniqueId = x.UserUniqueId
+                            }).ToList(),
+                            Video = new Core.TikTok.Video
+                            {
+                                Cover = x.Video.Cover,
+                                DownloadAddr = x.Video.DownloadAddr,
+                                Duration = x.Video.Duration,
+                                DynamicCover = x.Video.DynamicCover,
+                                Height = x.Video.Height,
+                                Id = x.Video.Id,
+                                OriginCover = x.Video.OriginCover,
+                                PlayAddr = x.Video.PlayAddr,
+                                Ratio = x.Video.Ratio,
+                                ReflowCover = x.Video.ReflowCover,
+                                ShareCover = x.Video.ShareCover,
+                                Width = x.Video.Width
+                            }
+                        })
+                        .Except(ViewModel.FetchPostedVideosVM.Videos));
+
+                //var getPreloadedFavoriteVideosJS = "window['SIGI_STATE'].ItemList['user-favorite']['list']";
+                //videos = await FindVideos(getPreloadedFavoriteVideosJS);
+                //ViewModel.FetchFavoriteVideosVM.Videos
+                //    .AddRange(videos
+                //        .Select(x => _mapper.Map<ItemInfo>(x))
+                //        .Except(ViewModel.FetchFavoriteVideosVM.Videos));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+        }
+
+        private async Task<List<PostedVideo>> FindVideos(string js)
+        {
+            var videos = new List<PostedVideo>();
+
+            try
+            {
+                var idsJson = await webview.CoreWebView2.ExecuteScriptAsync(js);
+                var ids = System.Text.Json.JsonSerializer.Deserialize<string[]>(idsJson);
+
+                foreach (var id in ids)
+                {
+                    var getVideoJsonJS = $"window['SIGI_STATE'].ItemModule['{id}']";
+                    var data = await webview.CoreWebView2.ExecuteScriptAsync(getVideoJsonJS);
+                    var item = JsonConvert.DeserializeObject<PostedVideo>(data);
+                    videos.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+
+            return videos;
         }
 
         private void CoreWebView2_WebResourceRequested(CoreWebView2 sender, CoreWebView2WebResourceRequestedEventArgs args)
@@ -91,9 +231,13 @@ namespace MyTikTokBackup.Desktop.Views
 
             if (uri.Contains("tiktok.com"))
             {
-                ViewModel.FindFollowingVM.CookieHeader = GetHeaders(args.Request.Headers)
+                var headers = GetHeaders(args.Request.Headers);
+                ViewModel.FindFollowingVM.CookieHeader = headers
                     .FirstOrDefault(x => x.Name.ToLower() == "cookie")?.Value;
-                Log.Information($"Set Cookie {ViewModel.FindFollowingVM.CookieHeader}");
+
+                ViewModel.FetchPostedVideosVM.Headers = headers.ToList();
+                ViewModel.FetchFavoriteVideosVM.Headers = headers.ToList();
+                //Log.Information($"Set Cookie {ViewModel.FindFollowingVM.CookieHeader}");
             }
 
             if (uri.Contains("tiktok.com/@") && args.Response.StatusCode == 200)
