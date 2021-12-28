@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -9,9 +10,10 @@ namespace MyTikTokBackup.Core.Database
 {
     public class DatabaseHelper
     {
-        public void Ensure()
+        public void EnsureCreated()
         {
             var db = new TikTokDbContext();
+            Directory.CreateDirectory(db.DatabaseFolder);
             db.Database.EnsureCreated();
         }
 

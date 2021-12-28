@@ -32,6 +32,20 @@ namespace MyTikTokBackup.Desktop
         {
             this.InitializeComponent();
             Ioc.Default.ConfigureServices(ConfigureServices());
+            RegisterNavigation();
+
+            var helper = new Core.Database.DatabaseHelper();
+            helper.EnsureCreated();
+
+            Log.Logger = new LoggerConfiguration()
+               .MinimumLevel.Debug()
+               .WriteTo.File(SettingsFiles.LogsFile, rollingInterval: RollingInterval.Day)
+               .WriteTo.Debug()
+               .CreateLogger();
+        }
+
+        private void RegisterNavigation()
+        {
             var nav = Ioc.Default.GetService<INavigationService>();
             nav.Register<MainPage, MainViewModel>();
             nav.Register<DownloadsPage, DownloadsViewModel>();
@@ -39,15 +53,6 @@ namespace MyTikTokBackup.Desktop
             nav.Register<TikTokBrowserPage, TikTokBrowserViewModel>();
             nav.Register<FoldersPage, FoldersViewModel>();
             nav.Register<ProfileVideosPage, ProfileVideosViewModel>();
-         
-            var helper = new Core.Database.DatabaseHelper();
-            helper.Ensure();
-
-            Log.Logger = new LoggerConfiguration()
-               .MinimumLevel.Debug()
-               .WriteTo.File(SettingsFiles.LogsFile, rollingInterval: RollingInterval.Day)
-               .WriteTo.Debug()
-               .CreateLogger();
         }
 
         static private bool _init = false;

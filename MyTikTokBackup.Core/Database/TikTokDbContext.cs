@@ -9,7 +9,8 @@ namespace MyTikTokBackup.Core.Database
 {
     public class TikTokDbContext : DbContext
     {
-        private static Lazy<string> appFolder = new Lazy<string>(() => Ioc.Default.GetService<IAppConfiguration>().DownloadsFolder);
+        private string appFolder = Ioc.Default.GetService<IAppConfiguration>().DownloadsFolder;
+        public string DatabaseFolder => appFolder;
 
         public DbSet<Author> Authors { get; set; }
         public DbSet<Hashtag> Hashtags { get; set; }
@@ -20,7 +21,7 @@ namespace MyTikTokBackup.Core.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            string dbPath = Path.Combine(appFolder.Value, "tiktok.db");
+            string dbPath = Path.Combine(DatabaseFolder, "tiktok.db");
 
             optionsBuilder.UseSqlite($"Data Source={dbPath}");
             //optionsBuilder.LogTo(Log.Information);
