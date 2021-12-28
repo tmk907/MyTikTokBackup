@@ -33,23 +33,26 @@
                 Grid.Row="0"
                 Margin="0,0,0,2"
                 Orientation="Horizontal">
-                <Button Click="Refresh_Click">
+                <Button Click="Refresh_Click" ToolTipService.ToolTip="Refresh page">
                     <Button.Content>
                         <SymbolIcon Symbol="Refresh" />
                     </Button.Content>
                 </Button>
-                <Button Click="Previous_Click">
+                <Button Click="Previous_Click" ToolTipService.ToolTip="Previous page">
                     <Button.Content>
                         <SymbolIcon Symbol="Back" />
                     </Button.Content>
                 </Button>
-                <Button Click="Next_Click">
+                <Button Click="Next_Click" ToolTipService.ToolTip="Next page">
                     <Button.Content>
                         <SymbolIcon Symbol="Forward" />
                     </Button.Content>
                 </Button>
-                <ToggleButton Content="Mobile" IsChecked="{x:Bind ViewModel.UseMobileVersion, Mode=TwoWay}" />
-                <Button Click="ClearCookies_Click">
+                <ToggleButton 
+                    ToolTipService.ToolTip="Switch to mobile version"
+                    Content="Mobile" 
+                    IsChecked="{x:Bind ViewModel.UseMobileVersion, Mode=TwoWay}" />
+                <Button Click="ClearCookies_Click" ToolTipService.ToolTip="Clear cookies">
                     <Button.Content>
                         <SymbolIcon Symbol="Clear" />
                     </Button.Content>
@@ -157,7 +160,7 @@
                     <TextBlock
                         Margin="0,0,0,4"
                         FontSize="12"
-                        Text="* Login and switch to following tab" />
+                        Text="* login required" />
                     <StackPanel Orientation="Horizontal">
                         <Button
                             Command="{x:Bind ViewModel.FindFollowingVM.FindFollowingCommand}"
@@ -175,8 +178,11 @@
                             <Span>users</Span>
                         </TextBlock>
                     </StackPanel>
-                    <ComboBox ItemsSource="{x:Bind ViewModel.FindFollowingVM.Users}" SelectionChanged="FollowingComboBox_SelectionChanged" />
                     <Button Click="{x:Bind ViewModel.AddAllFollowingToBookmarks}" Content="Add all to bookmarks" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Navigate to"/>
+                        <ComboBox ItemsSource="{x:Bind ViewModel.FindFollowingVM.Users}" SelectionChanged="FollowingComboBox_SelectionChanged" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
         </Grid>

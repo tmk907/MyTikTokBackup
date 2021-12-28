@@ -85,6 +85,7 @@
                 </Paragraph>
             </RichTextBlock>
             <Button
+                ToolTipService.ToolTip="Cancel downloads and clear queue"
                 Content="Cancel"
                 Margin="12,0,0,0"
                 Command="{x:Bind ViewModel.CancelCommand}"/>
