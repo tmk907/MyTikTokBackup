@@ -1,0 +1,12 @@
+Privacy policy for MyTikTokBackup
+
+MyTikTokBackup does not read, collect or send:
+- personal user data
+- files from local device
+
+MyTikTokBackup may collect and send to Microsoft following data:
+- crash reports
+- anonymous app usage statistics
+These data are used to fix bugs and improve application.
+
+Last modified: 28 December 2021
