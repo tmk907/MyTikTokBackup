@@ -26,7 +26,9 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 {
                     FolderPath = x,
                     UniqueId = Path.GetFileName(x)
-                }).Where(x => x.UniqueId.StartsWith('@'));
+                })
+                .Where(x => x.UniqueId.StartsWith('@'))
+                .OrderBy(x => x.UniqueId);
             Folders.ReplaceRange(folders);
         }
     }

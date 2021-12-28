@@ -8,6 +8,7 @@ using Microsoft.Toolkit.Mvvm.Messaging;
 using MvvmHelpers;
 using Newtonsoft.Json;
 using MyTikTokBackup.Core.Services;
+using Serilog;
 
 namespace MyTikTokBackup.Desktop.ViewModels
 {
@@ -79,13 +80,20 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
         public void AddUsersToBookmarks(IEnumerable<string> users)
         {
-            var toAdd = users
-                .Select(user => user.StartsWith('@') ? user : "@" + user)
-                .Where(user => !Bookmarks.Any(b => b.User == user))
-                .Select(user => new Bookmark(user, $"https://tiktok.com/{user}"));
-            Bookmarks.AddRange(toAdd);
-            SaveBookmarks(Bookmarks);
-            OnPropertyChanged(nameof(IsBookmarked));
+            try
+            {
+                var toAdd = users
+                        .Select(user => user.StartsWith('@') ? user : "@" + user)
+                        .Where(user => !Bookmarks.Any(b => b.User == user))
+                        .Select(user => new Bookmark(user, $"https://tiktok.com/{user}"));
+                Bookmarks.AddRange(toAdd);
+                SaveBookmarks(Bookmarks);
+                OnPropertyChanged(nameof(IsBookmarked));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
         }
 
 
