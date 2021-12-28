@@ -9,12 +9,40 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <StackPanel>
-            <TextBlock 
+        <StackPanel Margin="12">
+            <StackPanel Margin="0,12,0,12">
+                <TextBlock 
+                Text="Downloads folder" 
+                Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <TextBlock 
                 Text="{x:Bind ViewModel.DownloadsFolderPath, Mode=OneWay}"/>
-            <Button
-                Content="Downloads folder"
+                <Button
+                Content="Change"
                 Command="{x:Bind ViewModel.ChooseDownloadsFolderCommand}"/>
+            </StackPanel>
+
+            <StackPanel Margin="0,12,0,12">
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}">
+                Help:
+                </TextBlock>
+                <TextBlock>
+                * scroll page to load more videos, application automatically finds videos to download
+                    <LineBreak/>
+                * only new videos are downloaded
+                    <LineBreak/>
+                * you need to log in to search users
+                    <LineBreak/>
+                * if you log in you can add all users you follow to bookmarks
+                </TextBlock>
+            </StackPanel>
+
+            <StackPanel Margin="0,12,0,12">
+                <TextBlock Text="Version" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <TextBlock>
+                    MyTikTokBackup
+                <Run Text="{x:Bind ViewModel.AppVersion}"/>
+                </TextBlock>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </Page>

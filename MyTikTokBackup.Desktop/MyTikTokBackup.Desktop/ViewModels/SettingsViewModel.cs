@@ -4,6 +4,7 @@ using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.WindowsUWP.Helpers;
+using Windows.ApplicationModel;
 
 namespace MyTikTokBackup.Desktop.ViewModels
 {
@@ -41,6 +42,17 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 DownloadsFolderPath = _appConfiguration.DownloadsFolder;
                 _localVideosService.Refresh();
             }
+        }
+
+        public string AppVersion => GetAppVersion();
+
+        private string GetAppVersion()
+        {
+            Package package = Package.Current;
+            PackageId packageId = package.Id;
+            PackageVersion version = packageId.Version;
+
+            return string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
         }
     }
 }
