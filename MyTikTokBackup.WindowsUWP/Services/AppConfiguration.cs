@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.WindowsUWP.Helpers;
 using Windows.Storage;
@@ -20,7 +21,7 @@ namespace MyTikTokBackup.WindowsUWP.Services
 
         public string AppLocalFolder => SettingsFiles.AppLocalFolder;
 
-        private string DownloadsFolderPath => Windows.Storage.UserDataPaths.GetDefault().Downloads;
+        private string DownloadsFolderPath => Path.Combine(UserDataPaths.GetDefault().Downloads, "MyTikTokBackup");
     }
 }
 
