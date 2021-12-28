@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using MyTikTokBackup.Desktop.Services;
 using MyTikTokBackup.Desktop.Views;
+using MyTikTokBackup.WindowsUWP.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -38,8 +39,14 @@ namespace MyTikTokBackup.Desktop
             // Add handler for ContentFrame navigation.
             contentFrame.Navigated += On_Navigated;
 
-            // NavView doesn't load any page by default, so load home page.
-            NavView.SelectedItem = NavView.MenuItems[0];
+            if (VersionTracking.IsFirstLaunchEver)
+            {
+                NavView.SelectedItem = (NavigationViewItem)NavView.SettingsItem;
+            }
+            else
+            {
+                NavView.SelectedItem = NavView.MenuItems[0];
+            }
 
             //// Add keyboard accelerators for backwards navigation.
             //var goBack = new KeyboardAccelerator { Key = Windows.System.VirtualKey.GoBack };
