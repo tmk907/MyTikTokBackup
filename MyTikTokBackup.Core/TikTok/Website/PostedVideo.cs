@@ -1,336 +1,337 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace MyTikTokBackup.Core.TikTok.Website
 {
     public class PostedVideo
     {
-        [JsonProperty("author")]
+        [JsonPropertyName("author")]
         public string Author { get; set; }
 
-        [JsonProperty("authorId")]
+        [JsonPropertyName("authorId")]
         public string AuthorId { get; set; }
 
-        [JsonProperty("authorSecId")]
+        [JsonPropertyName("authorSecId")]
         public string AuthorSecId { get; set; }
 
-        [JsonProperty("authorStats")]
+        [JsonPropertyName("authorStats")]
         public AuthorStats AuthorStats { get; set; }
 
-        [JsonProperty("challenges")]
+        [JsonPropertyName("challenges")]
         public List<Challenge> Challenges { get; set; }
 
-        [JsonProperty("comments")]
+        [JsonPropertyName("comments")]
         public List<object> Comments { get; set; }
 
-        [JsonProperty("createTime")]
+        [JsonPropertyName("createTime")]
         public string CreateTime { get; set; }
 
-        [JsonProperty("desc")]
+        [JsonPropertyName("desc")]
         public string Desc { get; set; }
 
-        [JsonProperty("digged")]
+        [JsonPropertyName("digged")]
         public bool Digged { get; set; }
 
-        [JsonProperty("duetDisplay")]
+        [JsonPropertyName("duetDisplay")]
         public long DuetDisplay { get; set; }
 
-        [JsonProperty("duetEnabled")]
+        [JsonPropertyName("duetEnabled")]
         public bool DuetEnabled { get; set; }
 
-        [JsonProperty("duetInfo")]
+        [JsonPropertyName("duetInfo")]
         public DuetInfo DuetInfo { get; set; }
 
-        [JsonProperty("effectStickers")]
+        [JsonPropertyName("effectStickers")]
         public List<object> EffectStickers { get; set; }
 
-        [JsonProperty("forFriend")]
+        [JsonPropertyName("forFriend")]
         public bool ForFriend { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("indexEnabled")]
+        [JsonPropertyName("indexEnabled")]
         public bool IndexEnabled { get; set; }
 
-        [JsonProperty("isAd")]
+        [JsonPropertyName("isAd")]
         public bool IsAd { get; set; }
 
-        [JsonProperty("itemCommentStatus")]
+        [JsonPropertyName("itemCommentStatus")]
         public long ItemCommentStatus { get; set; }
 
-        [JsonProperty("itemMute")]
+        [JsonPropertyName("itemMute")]
         public bool ItemMute { get; set; }
 
-        [JsonProperty("music")]
+        [JsonPropertyName("music")]
         public Music Music { get; set; }
 
-        [JsonProperty("nickname")]
+        [JsonPropertyName("nickname")]
         public string Nickname { get; set; }
 
-        [JsonProperty("officalItem")]
+        [JsonPropertyName("officalItem")]
         public bool OfficalItem { get; set; }
 
-        [JsonProperty("originalItem")]
+        [JsonPropertyName("originalItem")]
         public bool OriginalItem { get; set; }
 
-        [JsonProperty("privateItem")]
+        [JsonPropertyName("privateItem")]
         public bool PrivateItem { get; set; }
 
-        [JsonProperty("scheduleTime")]
+        [JsonPropertyName("scheduleTime")]
         public long ScheduleTime { get; set; }
 
-        [JsonProperty("secret")]
+        [JsonPropertyName("secret")]
         public bool Secret { get; set; }
 
-        [JsonProperty("shareEnabled")]
+        [JsonPropertyName("shareEnabled")]
         public bool ShareEnabled { get; set; }
 
-        [JsonProperty("showNotPass")]
+        [JsonPropertyName("showNotPass")]
         public bool ShowNotPass { get; set; }
 
-        [JsonProperty("stats")]
+        [JsonPropertyName("stats")]
         public Stats Stats { get; set; }
 
-        [JsonProperty("stickersOnItem")]
+        [JsonPropertyName("stickersOnItem")]
         public List<StickersOnItem> StickersOnItem { get; set; }
 
-        [JsonProperty("stitchDisplay")]
+        [JsonPropertyName("stitchDisplay")]
         public long StitchDisplay { get; set; }
 
-        [JsonProperty("stitchEnabled")]
+        [JsonPropertyName("stitchEnabled")]
         public bool StitchEnabled { get; set; }
 
-        [JsonProperty("takeDown")]
+        [JsonPropertyName("takeDown")]
         public long TakeDown { get; set; }
 
-        [JsonProperty("textExtra")]
+        [JsonPropertyName("textExtra")]
         public List<TextExtra> TextExtra { get; set; }
 
-        [JsonProperty("video")]
+        [JsonPropertyName("video")]
         public Video Video { get; set; }
 
-        [JsonProperty("vl1")]
+        [JsonPropertyName("vl1")]
         public bool Vl1 { get; set; }
 
-        [JsonProperty("warnInfo")]
+        [JsonPropertyName("warnInfo")]
         public List<object> WarnInfo { get; set; }
     }
 
 
     public class AuthorStats
     {
-        [JsonProperty("diggCount")]
+        [JsonPropertyName("diggCount")]
         public long DiggCount { get; set; }
 
-        [JsonProperty("followerCount")]
+        [JsonPropertyName("followerCount")]
         public long FollowerCount { get; set; }
 
-        [JsonProperty("followingCount")]
+        [JsonPropertyName("followingCount")]
         public long FollowingCount { get; set; }
 
-        [JsonProperty("heart")]
+        [JsonPropertyName("heart")]
         public long Heart { get; set; }
 
-        [JsonProperty("heartCount")]
+        [JsonPropertyName("heartCount")]
         public long HeartCount { get; set; }
 
-        [JsonProperty("videoCount")]
+        [JsonPropertyName("videoCount")]
         public long VideoCount { get; set; }
     }
 
     public class Challenge
     {
-        [JsonProperty("coverLarger")]
+        [JsonPropertyName("coverLarger")]
         public string CoverLarger { get; set; }
 
-        [JsonProperty("coverMedium")]
+        [JsonPropertyName("coverMedium")]
         public string CoverMedium { get; set; }
 
-        [JsonProperty("coverThumb")]
+        [JsonPropertyName("coverThumb")]
         public string CoverThumb { get; set; }
 
-        [JsonProperty("desc")]
+        [JsonPropertyName("desc")]
         public string Desc { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("isCommerce")]
+        [JsonPropertyName("isCommerce")]
         public bool IsCommerce { get; set; }
 
-        [JsonProperty("profileLarger")]
+        [JsonPropertyName("profileLarger")]
         public string ProfileLarger { get; set; }
 
-        [JsonProperty("profileMedium")]
+        [JsonPropertyName("profileMedium")]
         public string ProfileMedium { get; set; }
 
-        [JsonProperty("profileThumb")]
+        [JsonPropertyName("profileThumb")]
         public string ProfileThumb { get; set; }
 
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; }
     }
 
     public class DuetInfo
     {
-        [JsonProperty("duetFromId")]
+        [JsonPropertyName("duetFromId")]
         public string DuetFromId { get; set; }
     }
 
     public class Music
     {
-        [JsonProperty("album")]
+        [JsonPropertyName("album")]
         public string Album { get; set; }
 
-        [JsonProperty("authorName")]
+        [JsonPropertyName("authorName")]
         public string AuthorName { get; set; }
 
-        [JsonProperty("coverLarge")]
+        [JsonPropertyName("coverLarge")]
         public string CoverLarge { get; set; }
 
-        [JsonProperty("coverMedium")]
+        [JsonPropertyName("coverMedium")]
         public string CoverMedium { get; set; }
 
-        [JsonProperty("coverThumb")]
+        [JsonPropertyName("coverThumb")]
         public string CoverThumb { get; set; }
 
-        [JsonProperty("duration")]
+        [JsonPropertyName("duration")]
         public long Duration { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("original")]
+        [JsonPropertyName("original")]
         public bool Original { get; set; }
 
-        [JsonProperty("playUrl")]
+        [JsonPropertyName("playUrl")]
         public string PlayUrl { get; set; }
 
-        [JsonProperty("scheduleSearchTime")]
+        [JsonPropertyName("scheduleSearchTime")]
         public long ScheduleSearchTime { get; set; }
 
-        [JsonProperty("title")]
+        [JsonPropertyName("title")]
         public string Title { get; set; }
     }
 
     public class Stats
     {
-        [JsonProperty("commentCount")]
+        [JsonPropertyName("commentCount")]
         public long CommentCount { get; set; }
 
-        [JsonProperty("diggCount")]
+        [JsonPropertyName("diggCount")]
         public long DiggCount { get; set; }
 
-        [JsonProperty("playCount")]
+        [JsonPropertyName("playCount")]
         public long PlayCount { get; set; }
 
-        [JsonProperty("shareCount")]
+        [JsonPropertyName("shareCount")]
         public long ShareCount { get; set; }
     }
 
     public class StickersOnItem
     {
-        [JsonProperty("stickerText")]
+        [JsonPropertyName("stickerText")]
         public List<string> StickerText { get; set; }
 
-        [JsonProperty("stickerType")]
+        [JsonPropertyName("stickerType")]
         public long StickerType { get; set; }
     }
 
     public class TextExtra
     {
-        [JsonProperty("awemeId")]
+        [JsonPropertyName("awemeId")]
         public string AwemeId { get; set; }
 
-        [JsonProperty("end")]
+        [JsonPropertyName("end")]
         public long End { get; set; }
 
-        [JsonProperty("hashtagId")]
+        [JsonPropertyName("hashtagId")]
         public string HashtagId { get; set; }
 
-        [JsonProperty("hashtagName")]
+        [JsonPropertyName("hashtagName")]
         public string HashtagName { get; set; }
 
-        [JsonProperty("isCommerce")]
+        [JsonPropertyName("isCommerce")]
         public bool IsCommerce { get; set; }
 
-        [JsonProperty("secUid")]
+        [JsonPropertyName("secUid")]
         public string SecUid { get; set; }
 
-        [JsonProperty("start")]
+        [JsonPropertyName("start")]
         public long Start { get; set; }
 
-        [JsonProperty("subType")]
+        [JsonPropertyName("subType")]
         public long SubType { get; set; }
 
-        [JsonProperty("type")]
+        [JsonPropertyName("type")]
         public long Type { get; set; }
 
-        [JsonProperty("userId")]
+        [JsonPropertyName("userId")]
         public string UserId { get; set; }
 
-        [JsonProperty("userUniqueId")]
+        [JsonPropertyName("userUniqueId")]
         public string UserUniqueId { get; set; }
     }
 
     public class Video
     {
-        [JsonProperty("bitrate")]
+        [JsonPropertyName("bitrate")]
         public long Bitrate { get; set; }
 
-        [JsonProperty("codecType")]
+        [JsonPropertyName("codecType")]
         public string CodecType { get; set; }
 
-        [JsonProperty("cover")]
+        [JsonPropertyName("cover")]
         public string Cover { get; set; }
 
-        [JsonProperty("definition")]
+        [JsonPropertyName("definition")]
         public string Definition { get; set; }
 
-        [JsonProperty("downloadAddr")]
+        [JsonPropertyName("downloadAddr")]
         public string DownloadAddr { get; set; }
 
-        [JsonProperty("duration")]
+        [JsonPropertyName("duration")]
         public long Duration { get; set; }
 
-        [JsonProperty("dynamicCover")]
+        [JsonPropertyName("dynamicCover")]
         public string DynamicCover { get; set; }
 
-        [JsonProperty("encodeUserTag")]
+        [JsonPropertyName("encodeUserTag")]
         public string EncodeUserTag { get; set; }
 
-        [JsonProperty("encodedType")]
+        [JsonPropertyName("encodedType")]
         public string EncodedType { get; set; }
 
-        [JsonProperty("format")]
+        [JsonPropertyName("format")]
         public string Format { get; set; }
 
-        [JsonProperty("height")]
+        [JsonPropertyName("height")]
         public long Height { get; set; }
 
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Id { get; set; }
 
-        [JsonProperty("originCover")]
+        [JsonPropertyName("originCover")]
         public string OriginCover { get; set; }
 
-        [JsonProperty("playAddr")]
+        [JsonPropertyName("playAddr")]
         public string PlayAddr { get; set; }
 
-        [JsonProperty("ratio")]
+        [JsonPropertyName("ratio")]
         public string Ratio { get; set; }
 
-        [JsonProperty("reflowCover")]
+        [JsonPropertyName("reflowCover")]
         public string ReflowCover { get; set; }
 
-        [JsonProperty("shareCover")]
+        [JsonPropertyName("shareCover")]
         public List<string> ShareCover { get; set; }
 
-        [JsonProperty("videoQuality")]
+        [JsonPropertyName("videoQuality")]
         public string VideoQuality { get; set; }
 
-        [JsonProperty("width")]
+        [JsonPropertyName("width")]
         public long Width { get; set; }
     }
 }

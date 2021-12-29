@@ -125,7 +125,7 @@ namespace MyTikTokBackup.Core.Services
                 _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
                 queue.Add(queueItem);
             }
-            if (type != DownloadType.Other)
+            if (type == DownloadType.Favorite || type == DownloadType.Posted)
             {
                 var t = FeedType.Liked;
                 if (type == DownloadType.Posted)

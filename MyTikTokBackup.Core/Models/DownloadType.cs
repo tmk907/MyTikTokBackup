@@ -9,6 +9,8 @@ namespace MyTikTokBackup.Core.Models
         [Description("Posted")]
         Posted,
         [Description("Other")]
-        Other
+        Other,
+        [Description("Bookmarks")]
+        Bookmarks
     }
 }

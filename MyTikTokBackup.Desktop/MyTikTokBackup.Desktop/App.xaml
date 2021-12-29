@@ -14,6 +14,8 @@
 			<converters:BoolNegationConverter x:Key="BoolNegationConverter"/>
             <converters:VisibilityConverter x:Key="VisibiliyConverter"/>
             <converters:VisibilityConverter x:Key="VisibilityNegationConverter" IsInverted="True"/>
+            <converters:NumberToVisibilityConverter x:Key="NumberToVisibilityConverter"/>
+            <converters:NumberToBoolConverter x:Key="NumberToBoolConverter"/>
 
 
             <Style TargetType="TextBlock">

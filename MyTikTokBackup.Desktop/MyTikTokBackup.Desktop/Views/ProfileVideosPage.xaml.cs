@@ -14,6 +14,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Win32.SafeHandles;
+using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Desktop.ViewModels;
 using Windows.Foundation;
@@ -73,23 +74,14 @@ namespace MyTikTokBackup.Desktop.Views
 
         private async void ProfileVideosPage_Loaded(object sender, RoutedEventArgs e)
         {
-            await VM.LoadAllVideos();
+            await VM.LoadPostedVideos();
         }
 
-        private void PostedVideos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Videos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var video = (VideoUI)e.AddedItems.FirstOrDefault();
             if (video == null) return;
-            var address = FilePathToAddress(video.FilePath, "Posted");
-            VideoChanged(address);
-        }
-
-
-        private void LikedVideos_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var video = (VideoUI)e.AddedItems.FirstOrDefault();
-            if (video == null) return;
-            var address = FilePathToAddress(video.FilePath, "Favorite");
+            var address = FilePathToAddress(video.FilePath, VM.SelectedVideoType.ToString());
             VideoChanged(address);
         }
 
@@ -121,16 +113,19 @@ namespace MyTikTokBackup.Desktop.Views
             webView.NavigateToString(html);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Posted_Click(object sender, RoutedEventArgs e)
         {
-            likedLV.Visibility = Visibility.Collapsed;
-            postedLV.Visibility = Visibility.Visible;
+            await VM.LoadPostedVideos();
         }
 
-        private void Button_Click_1(object sender, RoutedEventArgs e)
+        private async void Liked_Click(object sender, RoutedEventArgs e)
         {
-            postedLV.Visibility = Visibility.Collapsed;
-            likedLV.Visibility = Visibility.Visible;
+            await VM.LoadLikedVideos();
+        }
+
+        private async void Bookmarked_Click(object sender, RoutedEventArgs e)
+        {
+            await VM.LoadBookmarkedVideos();
         }
     }
 }

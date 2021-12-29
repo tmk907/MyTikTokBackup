@@ -1,0 +1,61 @@
+﻿<Page
+    x:Class="MyTikTokBackup.Desktop.Views.UserDataPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MyTikTokBackup.Desktop.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
+        <StackPanel Margin="12">
+            
+            <Button
+                Command="{x:Bind ViewModel.ImportUserDataFileCommand}"
+                Content="Import user data"/>
+            <StackPanel Margin="0,12,0,12">
+                <TextBlock Text="{x:Bind ViewModel.UserName, Mode=OneWay}"/>
+                <TextBlock Margin="12,0,0,0">
+                    <Run Text="{x:Bind ViewModel.HistoryCount, Mode=OneWay}"/>
+                    videos in browse history
+                </TextBlock>
+                <TextBlock Margin="12,0,0,0">
+                    <Run Text="{x:Bind ViewModel.LikedCount, Mode=OneWay}"/>
+                    liked videos
+                </TextBlock>
+                <TextBlock Margin="12,0,0,0">
+                    <Run Text="{x:Bind ViewModel.FavoriteCount, Mode=OneWay}"/>
+                    bookmarked favorite videos
+                </TextBlock>
+            </StackPanel>
+            
+            <ProgressRing IsActive="{x:Bind ViewModel.ImportUserDataFileCommand.IsRunning, Mode=OneWay}" />
+
+            <TextBlock>
+                Found: 
+                <Run Text="{x:Bind ViewModel.FavoriteVideos.Count, Mode=OneWay}"/>
+                favorite videos to download
+            </TextBlock>
+            
+            <Button
+                Content="Download"
+                IsEnabled="{x:Bind ViewModel.ImportUserDataFileCommand.IsRunning, Mode=OneWay, Converter={StaticResource BoolNegationConverter}}"
+                Command="{x:Bind ViewModel.DownloadFavoriteVideosCommand}"/>
+            
+            <StackPanel Margin="0,12,0,12">
+                <TextBlock Text="To download bookmarked videos you need user_data.json file. You can request it in TikTok mobile app."/>
+                <TextBlock>
+                To request your data:
+                <LineBreak/>
+                1. Go to Profile.
+                <LineBreak/>                
+                2. Tap the 3-line icon in the top right.
+                <LineBreak/>
+                3. Go to Privacy> Personalize and data > Download TikTok Data
+                <LineBreak/>
+                4. Follow the instructions provided.
+                </TextBlock>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Page>

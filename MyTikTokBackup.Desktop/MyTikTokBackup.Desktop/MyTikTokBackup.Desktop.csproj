@@ -12,6 +12,7 @@
   <ItemGroup>
     <None Remove="Views\FoldersPage.xaml" />
     <None Remove="Views\ProfileVideosPage.xaml" />
+    <None Remove="Views\UserDataPage.xaml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +30,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MyTikTokBackup.WindowsUWP\MyTikTokBackup.WindowsUWP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Views\UserDataPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
 </Project>

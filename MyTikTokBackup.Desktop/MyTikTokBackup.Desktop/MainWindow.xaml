@@ -28,7 +28,11 @@
                 Content="Downloads"
                 Icon="Download"
                 Tag="DownloadsPage" />
-            <!--<NavigationViewItemSeparator/>-->
+            <NavigationViewItemSeparator/>
+            <NavigationViewItem
+                Content="Import"
+                Icon="OpenFile"
+                Tag="UserDataPage" />
             <!--<NavigationViewItem Tag="YouTubeSearchPage" Content="Search">
                 <NavigationViewItem.Icon>
                     <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="{StaticResource Search}"/>

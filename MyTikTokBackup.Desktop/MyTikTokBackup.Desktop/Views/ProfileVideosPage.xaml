@@ -21,33 +21,18 @@
             <StackPanel Grid.Row="0">
                 <TextBlock Text="{x:Bind VM.UserUniqueId, Mode=OneWay}" />
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Content="Posted" Click="Button_Click" />
-                    <Button Content="Liked" Click="Button_Click_1"/>
+                    <Button Content="Posted" Click="Posted_Click" />
+                    <Button Content="Liked" Click="Liked_Click"/>
+                    <Button Content="Bookmarked" Click="Bookmarked_Click"/>
                 </StackPanel>
             </StackPanel>
             <Grid Grid.Row="1">
                 <ListView
-                    x:Name="postedLV"
                     IsItemClickEnabled="True"
-                    ItemsSource="{x:Bind VM.PostedVideos}"
-                    SelectionChanged="PostedVideos_SelectionChanged"
+                    ItemsSource="{x:Bind VM.Videos}"
+                    SelectionChanged="Videos_SelectionChanged"
                     SelectionMode="Single"
                     Visibility="Visible">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Video.Description}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-                <ListView
-                    x:Name="likedLV"
-                    IsItemClickEnabled="True"
-                    ItemsSource="{x:Bind VM.LikedVideos}"
-                    SelectionChanged="LikedVideos_SelectionChanged"
-                    SelectionMode="Single"
-                    Visibility="Collapsed">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel>

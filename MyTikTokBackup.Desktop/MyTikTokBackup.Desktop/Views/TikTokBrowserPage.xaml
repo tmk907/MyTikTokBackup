@@ -68,7 +68,7 @@
             </StackPanel>
             <InfoBar
                 x:Name="infoBar"
-                Title="Favorites"
+                Title="Following"
                 Grid.Row="0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top" />
@@ -140,7 +140,7 @@
                             Content="Download" />
                     </StackPanel>
                     <StackPanel Grid.Row="1">
-                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Favorite videos" />
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Liked videos" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center">
                                 <Span>Found</Span>

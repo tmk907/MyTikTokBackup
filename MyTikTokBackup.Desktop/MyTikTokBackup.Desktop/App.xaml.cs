@@ -53,6 +53,7 @@ namespace MyTikTokBackup.Desktop
             nav.Register<TikTokBrowserPage, TikTokBrowserViewModel>();
             nav.Register<FoldersPage, FoldersViewModel>();
             nav.Register<ProfileVideosPage, ProfileVideosViewModel>();
+            nav.Register<UserDataPage, UserDataViewModel>();
         }
 
         static private bool _init = false;
@@ -92,6 +93,7 @@ namespace MyTikTokBackup.Desktop
             services.AddSingleton<TikTokBrowserViewModel>();
             services.AddTransient<FoldersViewModel>();
             services.AddTransient<ProfileVideosViewModel>();
+            services.AddTransient<UserDataViewModel>();
             services.AddTransient<IDispatcher, DispatcherHelper>();
             services.AddTransient<IStorageService, StorageService>();
 
