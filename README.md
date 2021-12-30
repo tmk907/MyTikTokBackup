@@ -2,7 +2,7 @@
 
 Backup your TikTok videos. Download your favorite and posted videos or any public profile videos.
 
-<a href='https://www.microsoft.com/store/apps/9NPJL9MCPRKD?ocid=badgegithub'>
+<a href='https://www.microsoft.com/en-us/p/mytiktokbackup/9npjl9mcprkd?ocid=badgegithub'>
 <img width='240' height='96'  src='https://getbadgecdn.azureedge.net/images/English_S.png' 
 alt='English badge'/></a>
 
