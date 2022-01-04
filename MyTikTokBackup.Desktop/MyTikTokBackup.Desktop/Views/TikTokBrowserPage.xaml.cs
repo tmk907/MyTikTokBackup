@@ -127,7 +127,7 @@ namespace MyTikTokBackup.Desktop.Views
             }
             catch (Exception ex)
             {
-                Log.Error(ex.ToString());
+                //Log.Error(ex.ToString());
             }
 
             return videos;

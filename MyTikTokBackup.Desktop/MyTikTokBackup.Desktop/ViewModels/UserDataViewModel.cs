@@ -5,8 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using Flurl.Http;
 using Microsoft.Toolkit.Mvvm.ComponentModel;
 using Microsoft.Toolkit.Mvvm.Input;
 using MyTikTokBackup.Core.Models;
@@ -16,7 +17,6 @@ using MyTikTokBackup.Core.TikTok.UserData;
 using MyTikTokBackup.Core.TikTok.Website;
 using MyTikTokBackup.WindowsUWP.Helpers;
 using Serilog;
-using Windows.ApplicationModel;
 
 namespace MyTikTokBackup.Desktop.ViewModels
 {
@@ -25,22 +25,26 @@ namespace MyTikTokBackup.Desktop.ViewModels
         private readonly IAppConfiguration _appConfiguration;
         private readonly IDownloadsManager _downloadsManager;
         private readonly HttpClient _httpClient;
+        private readonly IFlurlClient _flurlClient;
 
         public UserDataViewModel(IAppConfiguration appConfiguration, IDownloadsManager downloadsManager)
         {
             _httpClient = new HttpClient();
+            _flurlClient = new FlurlClient()
+                .WithAutoRedirect(false)
+                .AllowHttpStatus(new[] { System.Net.HttpStatusCode.Redirect, System.Net.HttpStatusCode.Moved });
             _appConfiguration = appConfiguration;
             _downloadsManager = downloadsManager;
             ImportUserDataFileCommand = new AsyncRelayCommand(ImportUserDataFile);
-            FindFavoriteVideosCommand = new AsyncRelayCommand(FindFavoriteVideos);
             DownloadFavoriteVideosCommand = new AsyncRelayCommand(DownloadFavoriteVideos);
         }
 
         private UserData _userData;
         public ObservableCollection<PostedVideo> FavoriteVideos { get; } = new ObservableCollection<PostedVideo>();
 
+        public ObservableCollection<string> Urls { get; } = new ObservableCollection<string>();
+
         public IAsyncRelayCommand ImportUserDataFileCommand { get; }
-        public IAsyncRelayCommand FindFavoriteVideosCommand { get; }
         public IAsyncRelayCommand DownloadFavoriteVideosCommand { get; }
 
 
@@ -73,12 +77,18 @@ namespace MyTikTokBackup.Desktop.ViewModels
             set { SetProperty(ref userName, value); }
         }
 
+        private RechargeableCancellationTokenSource _cts = new RechargeableCancellationTokenSource();
 
         private async Task ImportUserDataFile()
         {
             var file = await FilePickerHelper.PickFile(new[] {".json"});
             if (file != null)
             {
+                _cts.Cancel();
+
+                Urls.Clear();
+                FavoriteVideos.Clear();
+
                 using FileStream openStream = File.OpenRead(file.Path);
                 _userData = await JsonSerializer.DeserializeAsync<UserData>(openStream);
 
@@ -87,17 +97,25 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 HistoryCount = _userData.Activity.VideoBrowsingHistory.VideoList.Count;
                 UserName = $"@{_userData.Profile.ProfileInformation.ProfileMap.UserName}";
 
-                await FindFavoriteVideos();
+                await GetUrlsAfterRedirects(_userData.Activity.FavoriteVideos.FavoriteVideoList.Select(x => x.Link).ToList(), _cts.Token);
+                await FindFavoriteVideos(Urls.ToList(), _cts.Token);
             }
         }
 
-        private async Task FindFavoriteVideos()
+        private async Task FindFavoriteVideos(List<string> urls, CancellationToken token)
         {
             FavoriteVideos.Clear();
-            foreach(var chunk in _userData.Activity.FavoriteVideos.FavoriteVideoList.Chunk(4))
+            var a = urls.ToList();
+            //for (int i = 0; i < 50; i++)
+            //{
+            //    urls.AddRange(a);
+            //}
+
+            foreach (var chunk in urls.Chunk(4))
             {
-                var tasks = chunk.Select(x => GetFavoriteVideoFromUrl(x.Link)).ToList();
+                var tasks = chunk.Select(x => GetFavoriteVideoFromUrl(x, token)).ToList();
                 await Task.WhenAll(tasks);
+                await Task.Delay(1000);
             }
         }
 
@@ -107,11 +125,11 @@ namespace MyTikTokBackup.Desktop.ViewModels
             await _downloadsManager.QueueVideos(UserName, type, FavoriteVideos.Select(x => Helper.ToItemInfo(x)).ToList());
         }
 
-        private async Task GetFavoriteVideoFromUrl(string url)
+        private async Task GetFavoriteVideoFromUrl(string url, CancellationToken token)
         {
             try
             {
-                var content = await _httpClient.GetStringAsync(url);
+                var content = await _httpClient.GetStringAsync(url, token);
                 var sigiState = GetSigiStateFromHtml(content);
                 var item = JsonSerializer.Deserialize<SigiStateItemModule>(sigiState).ItemModule.FirstOrDefault().Value;
                 FavoriteVideos.Add(item);
@@ -134,6 +152,81 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 sigiState = content.Substring(startIndex, endIndex - startIndex);
             }
             return sigiState;
+        }
+
+
+
+        private async Task<IEnumerable<string>> GetUrlsAfterRedirects(List<string> urls, CancellationToken token)
+        {          
+            Urls.Clear();
+
+            foreach (var chunk in urls.Chunk(10))
+            {
+                if (token.IsCancellationRequested) break;
+                var tasks = chunk.Select(x => GetFinalUrl(x, token)).ToList();
+                await Task.WhenAll(tasks);
+                await Task.Delay(1000);
+            }
+            Log.Information("Found all urls");
+
+            return Urls;
+        }
+
+        private async Task GetFinalUrl(string url, CancellationToken token)
+        {
+            try
+            {
+                if (url.Contains("tiktokv.com/share"))
+                {
+                    var response = await _flurlClient.Request(url).GetAsync(token);
+                    response.Headers.TryGetFirst("Location", out url);
+                }
+                if (url.Contains("tiktok.com/share"))
+                {
+                    var response = await $"https://www.tiktok.com/oembed?url={url}".GetJsonAsync<TikTokOembed>();
+                    //var id = url.Replace("https://www.tiktok.com/share/video/", "").Replace("/", "");
+                    //url = $"{response.AuthorName}/{id}";
+                    if (response.Html is not null)
+                    {
+                        var start = response.Html.IndexOf(@"cite=""") + @"cite=""".Length;
+                        var end = response.Html.IndexOf(@"""", start);
+                        url = response.Html.Substring(start, end - start);
+                        if (url.Contains("/@"))
+                        {
+                            Log.Information($"Url found {url}");
+                            Urls.Add(url);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+        }
+    }
+
+    public class RechargeableCancellationTokenSource : IDisposable
+    {
+        private CancellationTokenSource state = new CancellationTokenSource();
+
+        public CancellationTokenSource State => state;
+
+        public CancellationToken Token => State.Token;
+
+        public bool IsCancellationRequested => State.IsCancellationRequested;
+
+        public void Cancel()
+        {
+            this.state?.Cancel();
+            this.state?.Dispose();
+            this.state = new CancellationTokenSource();
+        }
+
+        public void Dispose()
+        {
+            this.state?.Dispose();
+            this.state = null;
         }
     }
 }

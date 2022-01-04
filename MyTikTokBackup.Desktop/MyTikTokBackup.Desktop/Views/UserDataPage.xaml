@@ -33,6 +33,9 @@
 
             <TextBlock>
                 Found: 
+                <LineBreak/>
+                <Run Text="{x:Bind ViewModel.Urls.Count, Mode=OneWay}"/> urls 
+                <LineBreak/>
                 <Run Text="{x:Bind ViewModel.FavoriteVideos.Count, Mode=OneWay}"/>
                 favorite videos to download
             </TextBlock>
