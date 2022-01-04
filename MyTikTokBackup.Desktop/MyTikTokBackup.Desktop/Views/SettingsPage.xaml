@@ -39,8 +39,8 @@
             <StackPanel Margin="0,12,0,12">
                 <TextBlock Text="Version" Style="{StaticResource SubtitleTextBlockStyle}"/>
                 <TextBlock>
-                    MyTikTokBackup
-                <Run Text="{x:Bind ViewModel.AppVersion}"/>
+                    <Run Text="{x:Bind ViewModel.AppName}"/>
+                    <Run Text="{x:Bind ViewModel.AppVersion}"/>
                 </TextBlock>
             </StackPanel>
         </StackPanel>

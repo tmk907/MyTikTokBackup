@@ -44,6 +44,8 @@ namespace MyTikTokBackup.Desktop.ViewModels
             }
         }
 
+        public string AppName => Package.Current.DisplayName;
+
         public string AppVersion => GetAppVersion();
 
         private string GetAppVersion()
