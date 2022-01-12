@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using MyTikTokBackup.Core.Database;
-using MyTikTokBackup.Core.Repositories;
 
 namespace MyTikTokBackup.Core.Services
 {
@@ -11,39 +11,39 @@ namespace MyTikTokBackup.Core.Services
     {
         Task<Category> CreateCategory(string name);
         Task Delete(string name);
-        Task<IEnumerable<Category>> GetAll();
+        Task<List<Category>> GetAll();
     }
 
     public class CategoriesService : ICategoriesService
     {
-        private readonly ICategoryRepository _categoryRepository;
-
-        public CategoriesService(ICategoryRepository categoryRepository)
-        {
-            _categoryRepository = categoryRepository;
-        }
-
         public async Task<Category> CreateCategory(string name)
         {
             var color = await GetAvailableColor();
             var category = new Category() { Color = color, Name = name };
-            await _categoryRepository.AddOrUpdate(category);
+            using var db = new TikTokDbContext();
+            db.Categories.Add(category);
+            await db.SaveChangesAsync();
             return category;
         }
 
         public async Task Delete(string name)
         {
-            await _categoryRepository.Delete(name);
+            using var db = new TikTokDbContext();
+            var category = db.Categories.FirstOrDefault(x => x.Name == name);
+            db.Categories.Remove(category);
+            await db.SaveChangesAsync();
+            
         }
 
-        public Task<IEnumerable<Category>> GetAll()
+        public Task<List<Category>> GetAll()
         {
-            return _categoryRepository.GetAll();
+            using var db = new TikTokDbContext();
+            return db.Categories.ToListAsync();
         }
 
         private async Task<string> GetAvailableColor()
         {
-            var categories = await _categoryRepository.GetAll();
+            var categories = await GetAll();
             return accentColors.FirstOrDefault(x => !categories.Select(x => x.Color).Contains(x));
         }
 

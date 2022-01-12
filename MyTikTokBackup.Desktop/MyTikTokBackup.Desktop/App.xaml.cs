@@ -93,7 +93,7 @@ namespace MyTikTokBackup.Desktop
             services.AddSingleton<TikTokBrowserViewModel>();
             services.AddTransient<FoldersViewModel>();
             services.AddTransient<ProfileVideosViewModel>();
-            services.AddTransient<UserDataViewModel>();
+            services.AddSingleton<UserDataViewModel>();
             services.AddTransient<IDispatcher, DispatcherHelper>();
             services.AddTransient<IStorageService, StorageService>();
 
