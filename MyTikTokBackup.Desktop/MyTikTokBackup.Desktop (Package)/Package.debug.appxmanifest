@@ -9,7 +9,7 @@
 	<Identity
 	  Name="60490polApki.MyTikTokBackupDev"
 	  Publisher="CN=EFEE17C1-DC2A-4553-8CE6-82B55CBC72FE"
-	  Version="1.1.6.0" />
+	  Version="1.1.8.0" />
 
 	<Properties>
 		<DisplayName>MyTikTokBackupDev</DisplayName>
