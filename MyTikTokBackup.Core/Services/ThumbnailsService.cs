@@ -15,7 +15,6 @@ namespace MyTikTokBackup.Core.Services
 
         private string _authorFolder;
         private string _musicFolder;
-        private string _videoFolder;
 
         private HttpClient _client;
 
@@ -25,7 +24,6 @@ namespace MyTikTokBackup.Core.Services
             _thumbnailsFolder = Path.Combine(appConfiguration.DownloadsFolder, "Cache");
             _authorFolder = Path.Combine(_thumbnailsFolder, "Author");
             _musicFolder = Path.Combine(_thumbnailsFolder, "Music");
-            _videoFolder = Path.Combine(_thumbnailsFolder, "Video");
             _client = new HttpClient();
         }
 
@@ -34,15 +32,13 @@ namespace MyTikTokBackup.Core.Services
             try
             {
                 var downloadTasks = new[] {
-                DownloadAsync(item.Author.AvatarLarger, _authorFolder, $"{item.Author.Id}-AvatarLarger{GetExtension(item.Author.AvatarLarger)}", cancellationToken),
-                DownloadAsync(item.Author.AvatarThumb, _authorFolder, $"{item.Author.Id}-AvatarThumb{GetExtension(item.Author.AvatarThumb)}", cancellationToken),
+                    DownloadAsync(item.Author.AvatarLarger, _authorFolder, $"{item.Author.Id}-AvatarLarger{GetExtension(item.Author.AvatarLarger)}", cancellationToken),
+                    DownloadAsync(item.Author.AvatarThumb, _authorFolder, $"{item.Author.Id}-AvatarThumb{GetExtension(item.Author.AvatarThumb)}", cancellationToken),
 
-                DownloadAsync(item.Music.PlayUrl, _musicFolder, $"{item.Music.Id}", cancellationToken),
-                DownloadAsync(item.Music.CoverLarge, _musicFolder, $"{item.Music.Id}-CoverLarge", cancellationToken),
-                DownloadAsync(item.Music.CoverThumb, _musicFolder, $"{item.Music.Id}-CoverThumb", cancellationToken),
-                    
-                //DownloadAsync(item.Video.DynamicCover, _videoFolder, $"{item.Video.Id}-DynamicCover.webp", cancellationToken),
-            };
+                    DownloadAsync(item.Music.PlayUrl, _musicFolder, $"{item.Music.Id}", cancellationToken),
+                    DownloadAsync(item.Music.CoverLarge, _musicFolder, $"{item.Music.Id}-CoverLarge", cancellationToken),
+                    DownloadAsync(item.Music.CoverThumb, _musicFolder, $"{item.Music.Id}-CoverThumb", cancellationToken),
+                };
 
                 await Task.WhenAll(downloadTasks).ConfigureAwait(false);
             }
