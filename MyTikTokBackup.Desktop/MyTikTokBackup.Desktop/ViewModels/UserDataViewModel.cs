@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,15 +23,19 @@ namespace MyTikTokBackup.Desktop.ViewModels
     {
         private readonly IAppConfiguration _appConfiguration;
         private readonly IDownloadsManager _downloadsManager;
-        private readonly HttpClient _httpClient;
         private readonly IFlurlClient _flurlClient;
+        private readonly IFlurlClient _flurlClient2;
+
+        private const string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 OPR/82.0.4227.43";
+
 
         public UserDataViewModel(IAppConfiguration appConfiguration, IDownloadsManager downloadsManager)
         {
-            _httpClient = new HttpClient();
             _flurlClient = new FlurlClient()
                 .WithAutoRedirect(false)
                 .AllowHttpStatus(new[] { System.Net.HttpStatusCode.Redirect, System.Net.HttpStatusCode.Moved });
+            _flurlClient2 = new FlurlClient()
+                .WithHeader("User-Agent", userAgent);
             _appConfiguration = appConfiguration;
             _downloadsManager = downloadsManager;
             ImportUserDataFileCommand = new AsyncRelayCommand(ImportUserDataFile);
@@ -129,7 +132,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             try
             {
-                var content = await _httpClient.GetStringAsync(url, token);
+                var content = await _flurlClient2.Request(url).GetStringAsync();
                 var sigiState = GetSigiStateFromHtml(content);
                 var item = JsonSerializer.Deserialize<SigiStateItemModule>(sigiState).ItemModule.FirstOrDefault().Value;
                 FavoriteVideos.Add(item);
