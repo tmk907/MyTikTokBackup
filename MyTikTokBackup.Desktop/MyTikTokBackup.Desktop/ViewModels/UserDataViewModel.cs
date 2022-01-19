@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
@@ -28,7 +29,6 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
         private const string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36 OPR/82.0.4227.43";
 
-
         public UserDataViewModel(IAppConfiguration appConfiguration, IDownloadsManager downloadsManager)
         {
             _flurlClient = new FlurlClient()
@@ -44,7 +44,6 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
         private UserData _userData;
         public ObservableCollection<PostedVideo> FavoriteVideos { get; } = new ObservableCollection<PostedVideo>();
-
         public ObservableCollection<string> Urls { get; } = new ObservableCollection<string>();
 
         public IAsyncRelayCommand ImportUserDataFileCommand { get; }
@@ -72,6 +71,12 @@ namespace MyTikTokBackup.Desktop.ViewModels
             set { SetProperty(ref historyCount, value); }
         }
 
+        private int downloadedCount;
+        public int DownloadedCount
+        {
+            get { return downloadedCount; }
+            set { SetProperty(ref downloadedCount, value); }
+        }
 
         private string userName;
         public string UserName
@@ -91,6 +96,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
                 Urls.Clear();
                 FavoriteVideos.Clear();
+                DownloadedCount = 0;
 
                 using FileStream openStream = File.OpenRead(file.Path);
                 _userData = await JsonSerializer.DeserializeAsync<UserData>(openStream);
@@ -101,18 +107,56 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 UserName = $"@{_userData.Profile.ProfileInformation.ProfileMap.UserName}";
 
                 await GetUrlsAfterRedirects(_userData.Activity.FavoriteVideos.FavoriteVideoList.Select(x => x.Link).ToList(), _cts.Token);
-                await FindFavoriteVideos(Urls.ToList(), _cts.Token);
+                var urls = ExcludeAlreadyDownloadedVideos(Urls);
+                await FindFavoriteVideos(urls, _cts.Token);
             }
         }
+
+        private List<string> ExcludeAlreadyDownloadedVideos(IEnumerable<string> urls)
+        {
+            var folderPath = Path.Combine(_appConfiguration.DownloadsFolder, UserName, DownloadType.Bookmarks.ToString());
+            var files = Directory.GetFiles(folderPath);
+            var regexIdFile = new Regex(@"\[(\d+)\]", RegexOptions.Compiled);
+            var regexIdUrl = new Regex(@"video\/(\d+)", RegexOptions.Compiled);
+            //https://www.tiktok.com/@username/video/6935994246793006341
+
+            var idToUrl = new Dictionary<string, string>();
+            foreach(var url in urls)
+            {
+                var match = regexIdUrl.Match(url);
+                if(TryGetCapture(match, out var id))
+                {
+                    idToUrl.Add(id, url);
+                }
+            }
+
+            foreach (var file in files)
+            {
+                var match = regexIdFile.Match(Path.GetFileName(file));
+                if (TryGetCapture(match, out var videoId) && idToUrl.ContainsKey(videoId))
+                {
+                    idToUrl.Remove(videoId);
+                    DownloadedCount++;
+                }
+            }
+            return idToUrl.Select(kv => kv.Value).ToList();
+        }
+
+        private bool TryGetCapture(Match match, out string data)
+        {
+            data = null;
+            if (match.Success)
+            {
+                data = match.Groups.Values.LastOrDefault()?.Value;
+            }
+            return data != null;
+        }
+
 
         private async Task FindFavoriteVideos(List<string> urls, CancellationToken token)
         {
             FavoriteVideos.Clear();
             var a = urls.ToList();
-            //for (int i = 0; i < 50; i++)
-            //{
-            //    urls.AddRange(a);
-            //}
 
             foreach (var chunk in urls.Chunk(4))
             {

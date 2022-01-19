@@ -36,6 +36,9 @@
                 <LineBreak/>
                 <Run Text="{x:Bind ViewModel.Urls.Count, Mode=OneWay}"/> urls 
                 <LineBreak/>
+                <Run Text="{x:Bind ViewModel.DownloadedCount, Mode=OneWay}"/>
+                videos already downloaded
+                <LineBreak/>
                 <Run Text="{x:Bind ViewModel.FavoriteVideos.Count, Mode=OneWay}"/>
                 bookmarked videos ready to download
             </TextBlock>
