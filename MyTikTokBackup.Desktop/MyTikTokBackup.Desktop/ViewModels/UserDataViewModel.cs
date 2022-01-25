@@ -34,8 +34,12 @@ namespace MyTikTokBackup.Desktop.ViewModels
             _flurlClient = new FlurlClient()
                 .WithAutoRedirect(false)
                 .AllowHttpStatus(new[] { System.Net.HttpStatusCode.Redirect, System.Net.HttpStatusCode.Moved });
+
             _flurlClient2 = new FlurlClient()
-                .WithHeader("User-Agent", userAgent);
+                .WithHeader("User-Agent", userAgent)
+                .WithHeader("Connection", "keep-alive")
+                .WithHeader("Accept", "*/*")
+                .WithHeader("Accept-Encoding", "gzip");
             _appConfiguration = appConfiguration;
             _downloadsManager = downloadsManager;
             ImportUserDataFileCommand = new AsyncRelayCommand(ImportUserDataFile);
