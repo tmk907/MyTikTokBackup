@@ -429,8 +429,8 @@ namespace MyTikTokBackup.Core.TikTok.UserData
 
     public class ProfileMap
     {
-        [JsonPropertyName("PlatformInfo")]
-        public List<string> PlatformInfo { get; set; }
+        //[JsonPropertyName("PlatformInfo")]
+        //public List<string> PlatformInfo { get; set; }
 
         [JsonPropertyName("bioDescription")]
         public string BioDescription { get; set; }

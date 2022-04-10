@@ -102,17 +102,38 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 FavoriteVideos.Clear();
                 DownloadedCount = 0;
 
-                using FileStream openStream = File.OpenRead(file.Path);
-                _userData = await JsonSerializer.DeserializeAsync<UserData>(openStream);
+                try
+                {
+                    using FileStream openStream = File.OpenRead(file.Path);
+                    _userData = await JsonSerializer.DeserializeAsync<UserData>(openStream);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Can't deserialize user data {0}", ex);
+                    return;
+                }
 
-                FavoriteCount = _userData.Activity.FavoriteVideos.FavoriteVideoList.Count;
-                LikedCount = _userData.Activity.LikeList.ItemFavoriteList.Count;
-                HistoryCount = _userData.Activity.VideoBrowsingHistory.VideoList.Count;
-                UserName = $"@{_userData.Profile.ProfileInformation.ProfileMap.UserName}";
+                try
+                {
+                    FavoriteCount = _userData.Activity.FavoriteVideos.FavoriteVideoList.Count;
+                    LikedCount = _userData.Activity.LikeList.ItemFavoriteList.Count;
+                    HistoryCount = _userData.Activity.VideoBrowsingHistory.VideoList.Count;
+                    UserName = $"@{_userData.Profile.ProfileInformation.ProfileMap.UserName}";
 
-                await GetUrlsAfterRedirects(_userData.Activity.FavoriteVideos.FavoriteVideoList.Select(x => x.Link).ToList(), _cts.Token);
-                var urls = ExcludeAlreadyDownloadedVideos(Urls);
-                await FindFavoriteVideos(urls, _cts.Token);
+                    Log.Information("{0} FavoriteCount {1}", nameof(UserDataViewModel), FavoriteCount);
+
+                    await GetUrlsAfterRedirects(_userData.Activity.FavoriteVideos.FavoriteVideoList.Select(x => x.Link).ToList(), _cts.Token);
+                    Log.Information("{0} Found {1} Urls", nameof(UserDataViewModel), Urls.Count);
+
+                    var urls = ExcludeAlreadyDownloadedVideos(Urls);
+                    Log.Information("{0} Excluded Already Downloaded Videos {1}", nameof(UserDataViewModel), Urls.Count);
+                    await FindFavoriteVideos(urls, _cts.Token);
+                    Log.Information("{0} Found Favorite Videos", nameof(UserDataViewModel));
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
             }
         }
 
@@ -218,7 +239,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 await Task.WhenAll(tasks);
                 await Task.Delay(1000);
             }
-            Log.Information("Found all urls");
+            Log.Information("{0} Found all urls", nameof(UserDataViewModel));
 
             return Urls;
         }
