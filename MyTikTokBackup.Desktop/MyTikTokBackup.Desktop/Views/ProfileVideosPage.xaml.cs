@@ -17,9 +17,10 @@ using Microsoft.Win32.SafeHandles;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Desktop.ViewModels;
+using Serilog;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-
+using MediaSource = Microsoft.UI.Media.Core.MediaSource;
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
@@ -31,6 +32,12 @@ namespace MyTikTokBackup.Desktop.Views
     public sealed partial class ProfileVideosPage : Page
     {
         public ProfileVideosViewModel VM { get; }
+
+        public MediaPlayerElement MediaPlayerElement { get; } = new() 
+        { 
+            AreTransportControlsEnabled = false
+        };
+
         public ProfileVideosPage()
         {
             this.InitializeComponent();
@@ -38,32 +45,17 @@ namespace MyTikTokBackup.Desktop.Views
             DataContext = VM;
             this.InitializeComponent();
             this.Loaded += ProfileVideosPage_Loaded;
-            webView.Loaded += WebView_Loaded;
-            this.Unloaded += ProfileVideosPage_Unloaded;
+
+            MediaPlayerElementContainer.Children.Add(MediaPlayerElement);
         }
 
-        private void ProfileVideosPage_Unloaded(object sender, RoutedEventArgs e)
-        {
-            var html = @$"
-<html>
-	<body>
-	</body>
-</html>";
-            webView.NavigateToString(html);
-        }
+        private void Play() => MediaPlayerElement.MediaPlayer?.Play();
 
-        private bool loaded = false;
-        string downloadsFolderPath;
-        string hostName = "downloadedvideos.tiktok";
+        private void Pause() => MediaPlayerElement.MediaPlayer?.Pause();
 
-        private async void WebView_Loaded(object sender, RoutedEventArgs e)
-        {
-            if (loaded) return;
-            await webView.EnsureCoreWebView2Async();
-            downloadsFolderPath = Ioc.Default.GetService<IAppConfiguration>().DownloadsFolder;
-            webView.CoreWebView2.SetVirtualHostNameToFolderMapping(hostName, downloadsFolderPath, CoreWebView2HostResourceAccessKind.Allow);
-            loaded = true;
-        }
+        private void CleanUpMediaPlayer() => MediaPlayerElement.SetMediaPlayer(null!);
+
+        private void ToggleTransportControls() => MediaPlayerElement.AreTransportControlsEnabled = !MediaPlayerElement.AreTransportControlsEnabled;
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -81,37 +73,16 @@ namespace MyTikTokBackup.Desktop.Views
         {
             var video = (VideoUI)e.AddedItems.FirstOrDefault();
             if (video == null) return;
-            var address = FilePathToAddress(video.FilePath, VM.SelectedVideoType.ToString());
-            VideoChanged(address);
+
+            if (MediaPlayerElement.MediaPlayer is null) MediaPlayerElement.SetMediaPlayer(new());
+
+            MediaPlayerElement.MediaPlayer.AutoPlay = true;
+            MediaPlayerElement.MediaPlayer.IsLoopingEnabled = true;
+
+            var fileStream = File.OpenRead(video.FilePath);
+            MediaPlayerElement.MediaPlayer.Source = MediaSource.CreateFromStream(fileStream.AsRandomAccessStream(), "video/mp4");
         }
 
-        private string FilePathToAddress(string filePath, string type)
-        {
-            var fileName = Path.GetFileName(filePath);
-            var videoUrl = Uri.EscapeDataString(fileName);
-            //string videoUrl = .Replace("#", "%23").Replace(" ", "%20"); ;
-            var address = $"http://{hostName}/{VM.UserUniqueId}/{type}/{videoUrl}";
-            return address;
-        }
-
-        private void VideoChanged(string address)
-        {
-            var html = @$"
-<html>
-	<body>
-		<video id='videoElement' style='width:100%; height: 100%; background: black;' loop controls autoplay>
-			<source id='videoSource' src='{address}'>
-		</video>
-	</body>
-</html>
-<style>
-	body {{
-		margin: 0px;
-	}}
-</style>";
-
-            webView.NavigateToString(html);
-        }
 
         private async void Posted_Click(object sender, RoutedEventArgs e)
         {
@@ -126,6 +97,23 @@ namespace MyTikTokBackup.Desktop.Views
         private async void Bookmarked_Click(object sender, RoutedEventArgs e)
         {
             await VM.LoadBookmarkedVideos();
+        }
+
+        private void MediaPlayerElementContainer_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            var session = MediaPlayerElement.MediaPlayer.PlaybackSession;
+            if (session.PlaybackState == Microsoft.UI.Media.Playback.MediaPlaybackState.Playing)
+            {
+                MediaPlayerElement.MediaPlayer.Pause();
+            }
+            else
+            {
+                MediaPlayerElement.MediaPlayer.Play();
+            }
+            Log.Debug($"Video size width:{session.NaturalVideoWidth} height:{session.NaturalVideoHeight}");
+            Log.Debug($"Container size width:{MediaPlayerElementContainer.ActualWidth} height:{MediaPlayerElementContainer.ActualHeight}");
+
+            
         }
     }
 }
