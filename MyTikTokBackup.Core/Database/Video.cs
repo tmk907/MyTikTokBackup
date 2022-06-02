@@ -14,7 +14,6 @@ namespace MyTikTokBackup.Core.Database
         public int Height { get; set; }
         public int Width { get; set; }
         public string Ratio { get; set; }
-        public int MyProperty { get; set; }
         public VideoStats Stats { get; set; }
 
         public Author Author { get; set; }

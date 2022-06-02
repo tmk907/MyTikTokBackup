@@ -18,6 +18,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
     {
         public Core.Database.Video Video { get; set; }
         public string FilePath { get; set; }
+        public string Url => $"https://www.tiktok.com/@{Video.Author.UniqueId}/video/{Video.VideoId}";
     }
 
     public class ProfileVideosViewModel : ObservableObject
@@ -38,6 +39,14 @@ namespace MyTikTokBackup.Desktop.ViewModels
         public ObservableRangeCollection<VideoUI> BookmarkedVideos { get; } = new ObservableRangeCollection<VideoUI>();
 
         public ObservableRangeCollection<VideoUI> Videos { get; } = new ObservableRangeCollection<VideoUI>();
+
+
+        private VideoUI selectedVideo;
+        public VideoUI SelectedVideo
+        {
+            get { return selectedVideo; }
+            set { SetProperty(ref selectedVideo, value); }
+        }
 
 
         private string userUniqueId;
@@ -101,7 +110,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
             var files = Directory.EnumerateFiles(folderPath);
             var profileVideos = await db.ProfileVideos
                 .Where(x => x.FeedType == feedType && x.UserUniqueId == UserUniqueId)
-                .Join(db.Videos, p => p.VideoId, v => v.VideoId, (p, v) => new { Index = p.Index, Video = v })
+                .Join(db.Videos.Include(x => x.Author), p => p.VideoId, v => v.VideoId, (p, v) => new { Index = p.Index, Video = v })
                 .OrderBy(x => x.Index).AsNoTracking().ToListAsync();
 
             var idToPath = new Dictionary<string, string>();

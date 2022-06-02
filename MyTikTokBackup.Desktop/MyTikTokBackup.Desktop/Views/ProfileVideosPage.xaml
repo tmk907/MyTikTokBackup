@@ -43,10 +43,38 @@
                 </ListView>
             </Grid>
         </Grid>
-        <Grid
-            x:Name="MediaPlayerElementContainer"
-            Grid.Column="1"
-            Background="GreenYellow"
-            Tapped="MediaPlayerElementContainer_Tapped" />
+        <Pivot Grid.Column="1" x:Name="videoPivot" SelectionChanged="Pivot_SelectionChanged">
+            <PivotItem Header="Video">
+                <Grid
+                    x:Name="MediaPlayerElementContainer"
+                    Background="Black"
+                    PointerEntered="MediaPlayerElementContainer_PointerEntered"
+                    PointerExited="MediaPlayerElementContainer_PointerExited"
+                    Tapped="MediaPlayerElementContainer_Tapped" />
+            </PivotItem>
+            <PivotItem Header="Web">
+                <WebView2
+                    x:Name="webView"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" />
+            </PivotItem>
+            <PivotItem Header="Info">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.VideoId, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Author.Nickname, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Author.Signature, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Author.UniqueId, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Description, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.CommentCount, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.ShareCount, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.PlayCount, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.DiggCount, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Music.Title, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Music.Album, Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Music.AuthorName, Mode=OneWay}" />
+                </StackPanel>
+            </PivotItem>
+        </Pivot>
+
     </Grid>
 </Page>

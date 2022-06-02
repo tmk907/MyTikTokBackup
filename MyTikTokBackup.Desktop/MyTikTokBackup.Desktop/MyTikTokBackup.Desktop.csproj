@@ -19,7 +19,7 @@
 	<PackageReference Include="AutoMapper" Version="10.1.1" />
 	<PackageReference Include="Flurl" Version="3.0.2" />
 	<PackageReference Include="Flurl.Http" Version="3.2.0" />
-	<PackageReference Include="KlearTouch.MediaPlayer.WinUI" Version="0.6.0-beta" />
+	<PackageReference Include="KlearTouch.MediaPlayer.WinUI" Version="0.7.0-beta" />
 	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
 	<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.3" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22000.194" />
