@@ -13,7 +13,8 @@ using Microsoft.Web.WebView2.Core;
 using MyTikTokBackup.Core.TikTok;
 using MyTikTokBackup.Desktop.ViewModels;
 using Serilog;
-using MediaSource = Microsoft.UI.Media.Core.MediaSource;
+using Windows.Media.Core;
+using Windows.Storage;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -27,10 +28,7 @@ namespace MyTikTokBackup.Desktop.Views
     {
         public ProfileVideosViewModel VM { get; }
 
-        public MediaPlayerElement MediaPlayerElement { get; } = new() 
-        { 
-            AreTransportControlsEnabled = false
-        };
+        public MediaPlayerElement MediaPlayerElement => mediaPlayerElement;
 
         public ProfileVideosPage()
         {
@@ -41,15 +39,17 @@ namespace MyTikTokBackup.Desktop.Views
             this.Loaded += ProfileVideosPage_Loaded;
             this.Unloaded += ProfileVideosPage_Unloaded;
             webView.Loaded += WebView_Loaded;
-
-            MediaPlayerElementContainer.Children.Add(MediaPlayerElement);
         }
 
         private void Play() => MediaPlayerElement.MediaPlayer?.Play();
 
         private void Pause() => MediaPlayerElement.MediaPlayer?.Pause();
 
-        private void CleanUpMediaPlayer() => MediaPlayerElement.SetMediaPlayer(null!);
+        private void CleanUpMediaPlayer()
+        {
+            mediaPlayerElement.MediaPlayer.Pause();
+            MediaPlayerElement.SetMediaPlayer(null!);
+        }
 
         private void ShowTransportControls(bool show) => MediaPlayerElement.AreTransportControlsEnabled = show;
 
@@ -62,7 +62,11 @@ namespace MyTikTokBackup.Desktop.Views
 
         private async void ProfileVideosPage_Loaded(object sender, RoutedEventArgs e)
         {
-            if (MediaPlayerElement.MediaPlayer is null) MediaPlayerElement.SetMediaPlayer(new());
+            if (MediaPlayerElement.MediaPlayer is null)
+            {
+                MediaPlayerElement.SetMediaPlayer(new());
+            }
+
             MediaPlayerElement.MediaPlayer.AutoPlay = true;
             MediaPlayerElement.MediaPlayer.IsLoopingEnabled = true;
 
@@ -94,7 +98,7 @@ namespace MyTikTokBackup.Desktop.Views
             args.Request.Headers.SetHeader("User-Agent", mobileUserAgent);
         }
 
-        private void Videos_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void Videos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var video = (VideoUI)e.AddedItems.FirstOrDefault();
             if (video == null) return;
@@ -103,10 +107,11 @@ namespace MyTikTokBackup.Desktop.Views
 
             if (!string.IsNullOrEmpty(video.FilePath))
             {
-                var fileStream = File.OpenRead(video.FilePath);
+                //var fileStream = File.OpenRead(video.FilePath);
 
                 MediaPlayerElement.MediaPlayer.AutoPlay = videoPivot.SelectedIndex == 0;
-                MediaPlayerElement.MediaPlayer.Source = MediaSource.CreateFromStream(fileStream.AsRandomAccessStream(), "video/mp4");
+                var file = await StorageFile.GetFileFromPathAsync(video.FilePath);
+                MediaPlayerElement.MediaPlayer.Source = MediaSource.CreateFromStorageFile(file);
             }
             if (videoPivot.SelectedIndex == 1 && loaded)
             {
@@ -131,11 +136,12 @@ namespace MyTikTokBackup.Desktop.Views
 
         private void MediaPlayerElementContainer_Tapped(object sender, TappedRoutedEventArgs e)
         {
+            Log.Information("MediaPlayerElementContainer_Tapped");
             var position = e.GetPosition(MediaPlayerElementContainer);
             if (position.Y < MediaPlayerElementContainer.ActualHeight - 90)
             {
                 var session = MediaPlayerElement.MediaPlayer.PlaybackSession;
-                if (session.PlaybackState == Microsoft.UI.Media.Playback.MediaPlaybackState.Playing)
+                if (session.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
                 {
                     Pause();
                 }
@@ -148,11 +154,13 @@ namespace MyTikTokBackup.Desktop.Views
 
         private void MediaPlayerElementContainer_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
+            Log.Information("MediaPlayerElementContainer_PointerEntered");
             ShowTransportControls(true);
         }
 
         private void MediaPlayerElementContainer_PointerExited(object sender, PointerRoutedEventArgs e)
         {
+            Log.Information("MediaPlayerElementContainer_PointerExited");
             ShowTransportControls(false);
         }
 

@@ -43,14 +43,25 @@
                 </ListView>
             </Grid>
         </Grid>
-        <Pivot Grid.Column="1" x:Name="videoPivot" SelectionChanged="Pivot_SelectionChanged">
+        <Pivot
+            x:Name="videoPivot"
+            Grid.Column="1"
+            SelectionChanged="Pivot_SelectionChanged">
             <PivotItem Header="Video">
                 <Grid
                     x:Name="MediaPlayerElementContainer"
-                    Background="Black"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
                     PointerEntered="MediaPlayerElementContainer_PointerEntered"
                     PointerExited="MediaPlayerElementContainer_PointerExited"
-                    Tapped="MediaPlayerElementContainer_Tapped" />
+                    Tapped="MediaPlayerElementContainer_Tapped">
+                    <MediaPlayerElement
+                        x:Name="mediaPlayerElement"
+                        Width="400"
+                        Height="400"
+                        AreTransportControlsEnabled="False" />
+                </Grid>
             </PivotItem>
             <PivotItem Header="Web">
                 <WebView2
