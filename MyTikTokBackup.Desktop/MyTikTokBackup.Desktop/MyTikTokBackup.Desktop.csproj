@@ -10,6 +10,7 @@
     <UseWinUI>true</UseWinUI>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Controls\LabelValueControl.xaml" />
     <None Remove="Views\FoldersPage.xaml" />
     <None Remove="Views\ProfileVideosPage.xaml" />
     <None Remove="Views\UserDataPage.xaml" />
@@ -17,12 +18,13 @@
 
   <ItemGroup>
 	<PackageReference Include="AutoMapper" Version="10.1.1" />
+	<PackageReference Include="CommunityToolkit.WinUI.UI.Controls" Version="7.1.2" />
 	<PackageReference Include="Flurl" Version="3.0.2" />
 	<PackageReference Include="Flurl.Http" Version="3.2.0" />
-	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
-	<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.220930.4-preview2" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.1" />
+	<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.755" />
 	<PackageReference Include="Microsoft.Toolkit.Mvvm" Version="7.1.2" />
+	<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.2.221116.1" />
 	<PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9" />
 	<PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <Manifest Include="$(ApplicationManifest)" />
@@ -30,6 +32,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MyTikTokBackup.WindowsUWP\MyTikTokBackup.WindowsUWP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="Controls\LabelValueControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 
   <ItemGroup>
