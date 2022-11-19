@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MyTikTokBackup.Core.Database
 {
@@ -6,6 +7,8 @@ namespace MyTikTokBackup.Core.Database
     {
         public string Name { get; set; }
         public string Color { get; set; }
+
+        public ICollection<Video> Videos { get; set; }
 
         public override bool Equals(object obj)
         {

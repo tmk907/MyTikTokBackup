@@ -18,6 +18,7 @@ namespace MyTikTokBackup.Core.Database
         public DbSet<Video> Videos { get; set; }
         public DbSet<ProfileVideo> ProfileVideos { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<VideoCategory> VideoCategories { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -38,6 +39,10 @@ namespace MyTikTokBackup.Core.Database
             modelBuilder.Entity<Video>()
                 .HasIndex(x => x.VideoId);
             modelBuilder.Entity<Video>().OwnsOne(p => p.Stats);
+            modelBuilder.Entity<Video>()
+                .HasMany<Category>(x => x.Categories)
+                .WithMany(x=>x.Videos)
+                .UsingEntity<VideoCategory>();
 
             modelBuilder.Entity<Hashtag>()
                 .HasIndex(x => x.Name);

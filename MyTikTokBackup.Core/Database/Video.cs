@@ -19,6 +19,7 @@ namespace MyTikTokBackup.Core.Database
         public Author Author { get; set; }
         public Music Music { get; set; }
         public ICollection<Hashtag> Hashtags { get; set; }
+        public ICollection<Category> Categories { get; set; }
     }
 
     public class VideoStats

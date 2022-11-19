@@ -9,9 +9,11 @@ namespace MyTikTokBackup.Core.Services
 {
     public interface ICategoriesService
     {
+        Task AddVideoToCategory(Category category, Video video);
         Task<Category> CreateCategory(string name);
         Task Delete(string name);
         Task<List<Category>> GetAll();
+        Task RemoveVideoFromCategory(Category category, Video video);
     }
 
     public class CategoriesService : ICategoriesService
@@ -39,6 +41,21 @@ namespace MyTikTokBackup.Core.Services
         {
             using var db = new TikTokDbContext();
             return db.Categories.ToListAsync();
+        }
+
+        public async Task AddVideoToCategory(Category category, Video video)
+        {
+            using var db = new TikTokDbContext();
+            db.VideoCategories.Add(new VideoCategory { Category = category, Video = video });
+            await db.SaveChangesAsync();
+        }
+
+        public async Task RemoveVideoFromCategory(Category category, Video video)
+        {
+            using var db = new TikTokDbContext();
+            var vc = db.VideoCategories.FirstOrDefault(x => x.Video.Id == video.Id && x.Category.Name == category.Name);
+            db.VideoCategories.Remove(vc);
+            await db.SaveChangesAsync();
         }
 
         private async Task<string> GetAvailableColor()

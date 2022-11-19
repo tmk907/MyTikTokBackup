@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Toolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using MyTikTokBackup.Core.Services;
-using MyTikTokBackup.Core.Repositories;
 using MyTikTokBackup.Desktop.Services;
 using MyTikTokBackup.Desktop.ViewModels;
 using MyTikTokBackup.Desktop.Views;
@@ -80,7 +79,6 @@ namespace MyTikTokBackup.Desktop
         {
             var services = new ServiceCollection();
 
-            services.AddTransient<ICategoryRepository, CategoryRepository>();
             services.AddSingleton<IDownloadsManager, DownloadsManager>();
             services.AddSingleton<ICategoriesService, CategoriesService>();
             services.AddSingleton<ILocalVideosService, LocalVideosService>();
