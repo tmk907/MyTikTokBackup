@@ -149,10 +149,22 @@ namespace MyTikTokBackup.Core.Services
 
         private string PrepareFilePath(VideoSource videoSource, ItemInfo item)
         {
-            var videoName = $"{item.Author.UniqueId} - {item.Desc} [{item.Video.Id}].mp4";
-            videoName = FilePathHelper.RemoveForbiddenChars(videoName);
             var folderPath = Path.Combine(_appConfiguration.DownloadsFolder, videoSource.UserUniqueId, videoSource.Type);
             Directory.CreateDirectory(folderPath);
+
+            var videoName = $"{item.Author.UniqueId} - {item.Desc} [{item.Video.Id}].mp4";
+
+            var maxPathLength = 255;
+            var maxFilenameLength = maxPathLength - folderPath.Length;
+            if (videoName.Length > maxFilenameLength)
+            {
+                var maxDescLength = maxFilenameLength - $"{item.Author.UniqueId} -  [{item.Video.Id}].mp4".Length;
+                var dots = "...";
+                var desc = item.Desc.Substring(0, maxDescLength - dots.Length);
+                videoName = $"{item.Author.UniqueId} - {desc}{dots} [{item.Video.Id}].mp4";
+            }
+            videoName = FilePathHelper.RemoveForbiddenChars(videoName);
+
             var filePath = Path.Combine(folderPath, videoName);
             return filePath;
         }
