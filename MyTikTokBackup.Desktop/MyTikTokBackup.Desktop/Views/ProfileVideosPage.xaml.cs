@@ -15,6 +15,8 @@ using MyTikTokBackup.Desktop.ViewModels;
 using Serilog;
 using Windows.Media.Core;
 using Windows.Storage;
+using Windows.System;
+using Windows.UI.Core;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -39,11 +41,56 @@ namespace MyTikTokBackup.Desktop.Views
             this.Loaded += ProfileVideosPage_Loaded;
             this.Unloaded += ProfileVideosPage_Unloaded;
             webView.Loaded += WebView_Loaded;
+            AddHandler(KeyDownEvent, new KeyEventHandler(ProfileVideosPage_KeyDown), true);
+        }
+
+        private static bool IsCtrlKeyPressed()
+        {
+            var ctrlState = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+            return ctrlState == CoreVirtualKeyStates.Down;
+        }
+
+        private async void ProfileVideosPage_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            try
+            {
+                if (IsCtrlKeyPressed())
+                {
+                    switch (e.Key)
+                    {
+                        case Windows.System.VirtualKey.Up:
+                            await SelectPreviousVideo();
+                            break;
+                        case Windows.System.VirtualKey.Down:
+                            await SelectNextVideo();
+                            break;
+                        case Windows.System.VirtualKey.Space:
+                            TogglePlayPause();
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
         }
 
         private void Play() => MediaPlayerElement.MediaPlayer?.Play();
 
         private void Pause() => MediaPlayerElement.MediaPlayer?.Pause();
+
+        private void TogglePlayPause()
+        {
+            if (MediaPlayerElement.MediaPlayer?.CurrentState == Windows.Media.Playback.MediaPlayerState.Playing)
+            {
+                Pause();
+            }
+            else
+            {
+                Play();
+            }
+        }
 
         private void CleanUpMediaPlayer()
         {
@@ -70,7 +117,7 @@ namespace MyTikTokBackup.Desktop.Views
             MediaPlayerElement.MediaPlayer.AutoPlay = true;
             MediaPlayerElement.MediaPlayer.IsLoopingEnabled = true;
 
-            await VM.LoadPostedVideos();
+            await VM.ShowPostedVideos();
         }
 
         private void ProfileVideosPage_Unloaded(object sender, RoutedEventArgs e)
@@ -103,6 +150,27 @@ namespace MyTikTokBackup.Desktop.Views
             var video = (VideoUI)e.AddedItems.FirstOrDefault();
             if (video == null) return;
 
+            await SelectVideo(video);
+        }
+
+        private async Task SelectPreviousVideo()
+        {
+            var index = VM.Videos.IndexOf(VM.SelectedVideo);
+            if (index == 0) return;
+            index--;
+            await SelectVideo(VM.Videos[index]);
+        }
+
+        private async Task SelectNextVideo()
+        {
+            var index = VM.Videos.IndexOf(VM.SelectedVideo);
+            if (index == VM.Videos.Count - 1) return;
+            index++;
+            await SelectVideo(VM.Videos[index]);
+        }
+
+        private async Task SelectVideo(VideoUI video)
+        {
             VM.SelectedVideo = video;
 
             if (!string.IsNullOrEmpty(video.FilePath))
@@ -121,17 +189,17 @@ namespace MyTikTokBackup.Desktop.Views
 
         private async void Posted_Click(object sender, RoutedEventArgs e)
         {
-            await VM.LoadPostedVideos();
+            await VM.ShowPostedVideos();
         }
 
         private async void Liked_Click(object sender, RoutedEventArgs e)
         {
-            await VM.LoadLikedVideos();
+            await VM.ShowLikedVideos();
         }
 
         private async void Bookmarked_Click(object sender, RoutedEventArgs e)
         {
-            await VM.LoadBookmarkedVideos();
+            await VM.ShowBookmarkedVideos();
         }
 
         private void MediaPlayerElementContainer_Tapped(object sender, TappedRoutedEventArgs e)
@@ -204,6 +272,22 @@ namespace MyTikTokBackup.Desktop.Views
 </html>";
                 webView.NavigateToString(html);
             }
+        }
+
+        private async void SearchBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            await VM.RefreshVideos();
+        }
+
+        private async  void SearchBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            await VM.RefreshVideos();
+        }
+
+        private async void CategoriesFilterControl_CategorySelectionChanged(object sender, Controls.CategorySelectionChangedEventArgs e)
+        {
+            VM.SelectedCategories.ReplaceRange(e.SelectedCategories.Select(x => x.Name));
+            await VM.RefreshVideos();
         }
     }
 }

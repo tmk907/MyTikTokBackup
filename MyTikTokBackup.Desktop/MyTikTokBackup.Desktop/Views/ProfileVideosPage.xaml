@@ -5,6 +5,7 @@
     xmlns:local="using:MyTikTokBackup.Desktop.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:MyTikTokBackup.Desktop.Controls"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
@@ -25,6 +26,13 @@
                     <Button Click="Liked_Click" Content="Liked" />
                     <Button Click="Bookmarked_Click" Content="Bookmarked" />
                 </StackPanel>
+                <AutoSuggestBox
+                    PlaceholderText="Search"
+                    QueryIcon="Find"
+                    QuerySubmitted="SearchBox_QuerySubmitted"
+                    Text="{x:Bind VM.Query, Mode=TwoWay}"
+                    TextChanged="SearchBox_TextChanged" />
+                <controls:CategoriesFilterControl CategorySelectionChanged="CategoriesFilterControl_CategorySelectionChanged"/>
             </StackPanel>
             <Grid Grid.Row="1">
                 <ListView
@@ -52,15 +60,10 @@
                     x:Name="MediaPlayerElementContainer"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Background="Transparent"
                     PointerEntered="MediaPlayerElementContainer_PointerEntered"
                     PointerExited="MediaPlayerElementContainer_PointerExited"
                     Tapped="MediaPlayerElementContainer_Tapped">
-                    <MediaPlayerElement
-                        x:Name="mediaPlayerElement"
-                        Width="400"
-                        Height="400"
-                        AreTransportControlsEnabled="False" />
+                    <MediaPlayerElement x:Name="mediaPlayerElement" AreTransportControlsEnabled="False" />
                 </Grid>
             </PivotItem>
             <PivotItem Header="Web">
@@ -71,18 +74,18 @@
             </PivotItem>
             <PivotItem Header="Info">
                 <StackPanel Orientation="Vertical">
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.VideoId, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Author.Nickname, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Author.Signature, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Author.UniqueId, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Description, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.CommentCount, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.ShareCount, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.PlayCount, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Stats.DiggCount, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Music.Title, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Music.Album, Mode=OneWay}" />
-                    <TextBlock Text="{x:Bind VM.SelectedVideo.Video.Music.AuthorName, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Video Id" Value="{x:Bind VM.SelectedVideo.Video.VideoId, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Author Nickname" Value="{x:Bind VM.SelectedVideo.Video.Author.Nickname, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Author Signature" Value="{x:Bind VM.SelectedVideo.Video.Author.Signature, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Author Unique Id" Value="{x:Bind VM.SelectedVideo.Video.Author.UniqueId, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Description" Value="{x:Bind VM.SelectedVideo.Video.Description, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Comment" Value="{x:Bind VM.SelectedVideo.Video.Stats.CommentCount, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Share" Value="{x:Bind VM.SelectedVideo.Video.Stats.ShareCount, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Play" Value="{x:Bind VM.SelectedVideo.Video.Stats.PlayCount, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Digg" Value="{x:Bind VM.SelectedVideo.Video.Stats.DiggCount, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Music Title" Value="{x:Bind VM.SelectedVideo.Video.Music.Title, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Music Album" Value="{x:Bind VM.SelectedVideo.Video.Music.Album, Mode=OneWay}" />
+                    <controls:LabelValueControl Label="Music Author" Value="{x:Bind VM.SelectedVideo.Video.Music.AuthorName, Mode=OneWay}" />
                 </StackPanel>
             </PivotItem>
         </Pivot>
