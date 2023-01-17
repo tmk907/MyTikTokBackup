@@ -19,12 +19,12 @@ namespace MyTikTokBackup.Core.TikTok
                 },
                 AuthorStats = new Core.TikTok.AuthorStats
                 {
-                    DiggCount = x.AuthorStats.DiggCount,
-                    FollowerCount = x.AuthorStats.FollowerCount,
-                    FollowingCount = x.AuthorStats.FollowingCount,
-                    Heart = x.AuthorStats.Heart,
-                    HeartCount = x.AuthorStats.HeartCount,
-                    VideoCount = x.AuthorStats.VideoCount
+                    DiggCount = x.AuthorStats?.DiggCount ?? 0,
+                    FollowerCount = x.AuthorStats?.FollowerCount ?? 0,
+                    FollowingCount = x.AuthorStats?.FollowingCount ?? 0,
+                    Heart = x.AuthorStats?.Heart ?? 0,
+                    HeartCount = x.AuthorStats?.HeartCount ?? 0,
+                    VideoCount = x.AuthorStats?.VideoCount ?? 0
                 },
                 Desc = x.Desc,
                 Id = x.Id,

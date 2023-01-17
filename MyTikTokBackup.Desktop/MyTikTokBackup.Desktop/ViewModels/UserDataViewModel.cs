@@ -140,6 +140,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         private List<string> ExcludeAlreadyDownloadedVideos(IEnumerable<string> urls)
         {
             var folderPath = Path.Combine(_appConfiguration.DownloadsFolder, UserName, DownloadType.Bookmarks.ToString());
+            Directory.CreateDirectory(folderPath);
             var files = Directory.GetFiles(folderPath);
             var regexIdFile = new Regex(@"\[(\d+)\]", RegexOptions.Compiled);
             var regexIdUrl = new Regex(@"video\/(\d+)", RegexOptions.Compiled);
@@ -214,10 +215,18 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
         private string GetSigiStateFromHtml(string content)
         {
-            var tokenStart = "window['SIGI_STATE']=";
-            var tokenEnd = ";window['SIGI_RETRY']";
+            var tokenStart = "<script id=\"SIGI_STATE\" type=\"application/json\">";
+            var tokenEnd = "</script><script id=\"SIGI_RETRY\"";
             var sigiState = "";
             int startIndex = content.IndexOf(tokenStart) + tokenStart.Length;
+
+            if (startIndex == -1)
+            {
+                tokenStart = "window['SIGI_STATE']=";
+                tokenEnd = ";window['SIGI_RETRY']";
+                startIndex = content.IndexOf(tokenStart) + tokenStart.Length;
+            }
+
             if (startIndex > tokenStart.Length)
             {
                 int endIndex = content.IndexOf(tokenEnd, startIndex);
