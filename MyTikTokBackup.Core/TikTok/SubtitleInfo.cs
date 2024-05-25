@@ -14,7 +14,7 @@ namespace MyTikTokBackup.Core.TikTok
         public string LanguageID { get; set; }
 
         [JsonProperty("Size")]
-        public int Size { get; set; }
+        public long Size { get; set; }
 
         [JsonProperty("Source")]
         public string Source { get; set; }
@@ -23,7 +23,7 @@ namespace MyTikTokBackup.Core.TikTok
         public string Url { get; set; }
 
         [JsonProperty("UrlExpire")]
-        public int UrlExpire { get; set; }
+        public long UrlExpire { get; set; }
 
         [JsonProperty("Version")]
         public string Version { get; set; }

@@ -6,7 +6,7 @@ namespace MyTikTokBackup.Core.TikTok
     public class PlayAddr
     {
         [JsonProperty("DataSize")]
-        public int DataSize { get; set; }
+        public long DataSize { get; set; }
 
         [JsonProperty("FileCs")]
         public string FileCs { get; set; }

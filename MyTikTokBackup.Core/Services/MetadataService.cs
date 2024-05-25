@@ -103,8 +103,8 @@ namespace MyTikTokBackup.Core.Services
                 using var db = new TikTokDbContext();
 
                 var hashtags = item.TextExtra
-                    .Where(x => !string.IsNullOrEmpty(x.HashtagId) && !string.IsNullOrEmpty(x.HashtagName))
-                    .Select(x => new Hashtag { Id = x.HashtagId, Name = x.HashtagName });
+                    .Where(x => !string.IsNullOrEmpty(x.HashtagName))
+                    .Select(x => new Hashtag { Id = "", Name = x.HashtagName });
                 var hashtagNames = hashtags.Select(x => x.Name).ToList();
                 var fromDb = await db.Hashtags.Where(x => hashtagNames.Contains(x.Name)).ToListAsync();
                 var toInsert = hashtags.Except(fromDb);
@@ -134,7 +134,7 @@ namespace MyTikTokBackup.Core.Services
                     {
                         Author = author,
                         Description = item.Desc,
-                        DuetFromId = item.DuetInfo?.DuetFromId,
+                        DuetFromId = "",//item.DuetInfo?.DuetFromId,
                         Duration = TimeSpan.FromSeconds(item.Video.Duration),
                         Hashtags = hashtags.ToList(),
                         Height = (int)item.Video.Height,

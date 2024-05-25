@@ -52,7 +52,7 @@ namespace MyTikTokBackup.Core.TikTok
                 {
                     AwemeId = x.AwemeId,
                     End = x.End,
-                    HashtagId = x.HashtagId,
+                    //HashtagId = x.HashtagId,
                     HashtagName = x.HashtagName,
                     UserId = x.UserId,
                     UserUniqueId = x.UserUniqueId
@@ -68,8 +68,8 @@ namespace MyTikTokBackup.Core.TikTok
                     OriginCover = x.Video.OriginCover,
                     PlayAddr = x.Video.PlayAddr,
                     Ratio = x.Video.Ratio,
-                    ReflowCover = x.Video.ReflowCover,
-                    ShareCover = x.Video.ShareCover,
+                    //ReflowCover = x.Video.ReflowCover,
+                    //ShareCover = x.Video.ShareCover,
                     Width = x.Video.Width
                 }
             };

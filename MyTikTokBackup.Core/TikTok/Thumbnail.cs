@@ -6,12 +6,12 @@ namespace MyTikTokBackup.Core.TikTok
     public class Thumbnail
     {
         [JsonProperty("height")]
-        public int Height { get; set; }
+        public long Height { get; set; }
 
         [JsonProperty("urlList")]
         public List<string> UrlList { get; set; }
 
         [JsonProperty("width")]
-        public int Width { get; set; }
+        public long Width { get; set; }
     }
 }

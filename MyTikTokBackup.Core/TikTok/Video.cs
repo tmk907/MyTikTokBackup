@@ -7,7 +7,7 @@ namespace MyTikTokBackup.Core.TikTok
     public class Video
     {
         [JsonProperty("bitrate")]
-        public int Bitrate { get; set; }
+        public long Bitrate { get; set; }
 
         [JsonProperty("bitrateInfo")]
         public List<BitrateInfo> BitrateInfo { get; set; }
@@ -25,7 +25,7 @@ namespace MyTikTokBackup.Core.TikTok
         public string DownloadAddr { get; set; }
 
         [JsonProperty("duration")]
-        public int Duration { get; set; }
+        public long Duration { get; set; }
 
         [JsonProperty("dynamicCover")]
         public string DynamicCover { get; set; }
@@ -40,7 +40,7 @@ namespace MyTikTokBackup.Core.TikTok
         public string Format { get; set; }
 
         [JsonProperty("height")]
-        public int Height { get; set; }
+        public long Height { get; set; }
 
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -64,10 +64,28 @@ namespace MyTikTokBackup.Core.TikTok
         public VolumeInfo VolumeInfo { get; set; }
 
         [JsonProperty("width")]
-        public int Width { get; set; }
+        public long Width { get; set; }
 
         [JsonProperty("zoomCover")]
         public ZoomCover ZoomCover { get; set; }
+    }
+
+    public class VideoSuggestWordsList
+    {
+        [JsonProperty("video_suggest_words_struct")]
+        public List<VideoSuggestWordsStruct> VideoSuggestWordsStruct { get; set; }
+    }
+
+    public class VideoSuggestWordsStruct
+    {
+        [JsonProperty("hlong_text")]
+        public string HlongText { get; set; }
+
+        [JsonProperty("scene")]
+        public string Scene { get; set; }
+
+        [JsonProperty("words")]
+        public List<Word> Words { get; set; }
     }
 
     public class VolumeInfo
@@ -77,6 +95,15 @@ namespace MyTikTokBackup.Core.TikTok
 
         [JsonProperty("Peak")]
         public double Peak { get; set; }
+    }
+
+    public class Word
+    {
+        [JsonProperty("word")]
+        public string WordValue { get; set; }
+
+        [JsonProperty("word_id")]
+        public string WordId { get; set; }
     }
 
     public class ZoomCover

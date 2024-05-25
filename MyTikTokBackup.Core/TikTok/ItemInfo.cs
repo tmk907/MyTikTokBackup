@@ -9,11 +9,11 @@ namespace MyTikTokBackup.Core.TikTok
         [JsonProperty("AIGCDescription")]
         public string AIGCDescription { get; set; }
 
-        [JsonProperty("anchors")]
-        public List<Anchor> Anchors { get; set; }
-
         [JsonProperty("author")]
         public Author Author { get; set; }
+
+        [JsonProperty("authorStats")]
+        public AuthorStats AuthorStats { get; set; }
 
         [JsonProperty("challenges")]
         public List<Challenge> Challenges { get; set; }
@@ -90,11 +90,30 @@ namespace MyTikTokBackup.Core.TikTok
         [JsonProperty("video")]
         public Video Video { get; set; }
 
+        [JsonProperty("videoSuggestWordsList")]
+        public VideoSuggestWordsList VideoSuggestWordsList { get; set; }
+
+        [JsonProperty("anchors")]
+        public List<Anchor> Anchors { get; set; }
+
+        [JsonProperty("poi")]
+        public Poi Poi { get; set; }
+
+        [JsonProperty("aigcLabelType")]
+        public long? AigcLabelType { get; set; }
+
+        [JsonProperty("warnInfo")]
+        public List<WarnInfo> WarnInfo { get; set; }
+
+        [JsonProperty("playlistId")]
+        public string PlaylistId { get; set; }
+
+        [JsonProperty("adAuthorization")]
+        public bool? AdAuthorization { get; set; }
+
         [JsonProperty("imagePost")]
         public ImagePost ImagePost { get; set; }
 
-        [JsonProperty("itemMute")]
-        public bool? ItemMute { get; set; }
 
         public List<Header> Headers { get; set; } = new List<Header>();
 
@@ -112,5 +131,16 @@ namespace MyTikTokBackup.Core.TikTok
 
     public class ItemControl
     {
+        [JsonProperty("can_comment")]
+        public bool? CanComment { get; set; }
+
+        [JsonProperty("can_creator_redirect")]
+        public bool? CanCreatorRedirect { get; set; }
+
+        [JsonProperty("can_music_redirect")]
+        public bool? CanMusicRedirect { get; set; }
+
+        [JsonProperty("can_share")]
+        public bool? CanShare { get; set; }
     }
 }

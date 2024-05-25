@@ -30,13 +30,13 @@ namespace MyTikTokBackup.Core.TikTok
     public class Image
     {
         [JsonProperty("imageHeight")]
-        public int ImageHeight { get; set; }
+        public long ImageHeight { get; set; }
 
         [JsonProperty("imageURL")]
         public ImageURL ImageURL { get; set; }
 
         [JsonProperty("imageWidth")]
-        public int ImageWidth { get; set; }
+        public long ImageWidth { get; set; }
     }
 
     public class ImagePost
@@ -63,13 +63,13 @@ namespace MyTikTokBackup.Core.TikTok
     public class ShareCover
     {
         [JsonProperty("imageHeight")]
-        public int ImageHeight { get; set; }
+        public long ImageHeight { get; set; }
 
         [JsonProperty("imageURL")]
         public ImageURL ImageURL { get; set; }
 
         [JsonProperty("imageWidth")]
-        public int ImageWidth { get; set; }
+        public long ImageWidth { get; set; }
     }
 
     public class LogPb
