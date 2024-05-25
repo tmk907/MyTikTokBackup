@@ -24,12 +24,14 @@ namespace MyTikTokBackup.Core.TikTok
             var url = "https://m.tiktok.com/api/user/list/?aid=1988&count=100&maxCursor=0&minCursor=0";
             try
             {
-                var myFollowing = await url.WithCookie(_sessionIdKey, _sessionIdValue).GetJsonAsync<MyFollowing>(cancellationToken);
+                var myFollowing = await url.WithCookie(_sessionIdKey, _sessionIdValue)
+                    .GetJsonAsync<MyFollowing>(System.Net.Http.HttpCompletionOption.ResponseContentRead, cancellationToken);
                 userList.AddRange(myFollowing.UserList);
                 while (myFollowing?.UserList != null)
                 {
                     url = $"https://m.tiktok.com/api/user/list/?aid=1988&count=100&maxCursor={myFollowing.MaxCursor}&minCursor={myFollowing.MinCursor}";
-                    myFollowing = await url.WithCookie(_sessionIdKey, _sessionIdValue).GetJsonAsync<MyFollowing>(cancellationToken);
+                    myFollowing = await url.WithCookie(_sessionIdKey, _sessionIdValue)
+                        .GetJsonAsync<MyFollowing>(System.Net.Http.HttpCompletionOption.ResponseContentRead, cancellationToken);
                     userList.AddRange(myFollowing.UserList);
                 }
             }
