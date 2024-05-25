@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,11 +17,105 @@ namespace MyTikTokBackup.Core.Database
             var db = new TikTokDbContext();
             Directory.CreateDirectory(db.DatabaseFolder);
             db.Database.EnsureCreated();
+
+            Migration1(db);
+            Migration2(db);
+        }
+
+        private void Migration1(TikTokDbContext db)
+        {
+            var rowCount = EFCoreHelper.RawSqlQuery<int>(
+                """
+                select count(*) from pragma_table_info('Videos') where name = 'MyProperty'
+                """, dbReader => dbReader.GetFieldValue<int>(0));
+
+            if (rowCount.FirstOrDefault() == 1)
+            {
+                try
+                {
+                    var sql =
+                    """
+                    ALTER TABLE Videos DROP COLUMN MyProperty
+                    """;
+
+                    db.Database.ExecuteSqlRaw(sql);
+                    db.SaveChanges();
+                    Log.Information($"Database {db.DatabaseFolder} migrated to v1");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Error while migrating database to v1");
+                    Log.Error(ex.ToString());
+                    throw;
+                }
+            }
+        }
+
+        private void Migration2(TikTokDbContext db)
+        {
+            var rowCount = EFCoreHelper.RawSqlQuery<int>(
+                """
+                select count(*) from pragma_table_info('Hashtags') where name = 'Id' and type = 'TEXT'
+                """, dbReader => dbReader.GetFieldValue<int>(0));
+
+            if (rowCount.FirstOrDefault() == 1)
+            {
+                try
+                {
+                    var sql =
+                    """
+                    BEGIN TRANSACTION;
+                    CREATE TABLE Hashtags_Copy( 
+                        Id INTEGER NOT NULL CONSTRAINT "PK_Hashtags" PRIMARY KEY AUTOINCREMENT, 
+                        Name TEXT NULL,
+                        OldId TEXT NULL
+                    );
+                    DROP INDEX "IX_Hashtags_Name";
+                    CREATE INDEX "IX_Hashtags_Name" ON "Hashtags_Copy" ("Name");
+                    INSERT INTO Hashtags_Copy (Name, OldId) SELECT Name, Id FROM Hashtags;
+
+                    CREATE TABLE HashtagVideo_Copy (
+                        HashtagsId TEXT NOT NULL,
+                        VideosId INTEGER NOT NULL
+                    );
+                    INSERT INTO HashtagVideo_Copy (HashtagsId, VideosId) 
+                    SELECT hc.Id, hv.VideosId 
+                    FROM HashtagVideo hv
+                    JOIN Hashtags_Copy hc ON hc.OldId = hv.HashtagsId order by videosid;
+
+                    DROP TABLE Hashtags;
+                    ALTER TABLE Hashtags_Copy RENAME TO Hashtags;
+
+                    DROP TABLE HashtagVideo;
+                    CREATE TABLE HashtagVideo (
+                        HashtagsId INTEGER NOT NULL,
+                        VideosId INTEGER NOT NULL,
+                        CONSTRAINT "PK_HashtagVideo" PRIMARY KEY ("HashtagsId", "VideosId"),
+                        CONSTRAINT "FK_HashtagVideo_Hashtags_HashtagsId" FOREIGN KEY ("HashtagsId") REFERENCES "Hashtags" ("Id") ON DELETE CASCADE,
+                        CONSTRAINT "FK_HashtagVideo_Videos_VideosId" FOREIGN KEY ("VideosId") REFERENCES "Videos" ("Id") ON DELETE CASCADE
+                    );
+
+                    INSERT INTO HashtagVideo (HashtagsId, VideosId) SELECT HashtagsId, VideosId FROM HashtagVideo_Copy;
+                    DROP TABLE HashtagVideo_Copy;
+                    COMMIT;
+                    """;
+
+                    db.Database.ExecuteSqlRaw(sql);
+                    db.SaveChanges();
+                    Log.Information($"Database {db.DatabaseFolder} migrated to v2");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Error while migrating database to v2");
+                    Log.Error(ex.ToString());
+                    throw;
+                }
+            }
         }
 
         public async Task AddOrUpdateProfileVideos(string userUniqueId, FeedType feedType, IEnumerable<string> newVideos)
         {
-            using(var db = new TikTokDbContext())
+            using (var db = new TikTokDbContext())
             {
                 var oldVideos = await db.ProfileVideos.Where(x => x.UserUniqueId == userUniqueId && x.FeedType == feedType).OrderBy(x => x.Index).ToListAsync();
 
@@ -47,9 +143,9 @@ namespace MyTikTokBackup.Core.Database
             var merged = new List<string>();
 
             int o = 0;
-            for(int n = 0; n < newVideos.Count; n++)
+            for (int n = 0; n < newVideos.Count; n++)
             {
-                if(o < oldVideos.Count && newVideos[n] == oldVideos[o])
+                if (o < oldVideos.Count && newVideos[n] == oldVideos[o])
                 {
                     merged.Add(newVideos[n]);
                     o++;
@@ -71,6 +167,35 @@ namespace MyTikTokBackup.Core.Database
             Log.Information($"Merged new {newVideos.Count} old {oldVideos.Count} merged {merged.Count}");
 
             return merged;
+        }
+    }
+
+    public static class EFCoreHelper
+    {
+        public static List<T> RawSqlQuery<T>(string query, Func<DbDataReader, T> map)
+        {
+            using (var context = new TikTokDbContext())
+            {
+                using (var command = context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = query;
+                    command.CommandType = CommandType.Text;
+
+                    context.Database.OpenConnection();
+
+                    using (var result = command.ExecuteReader())
+                    {
+                        var entities = new List<T>();
+
+                        while (result.Read())
+                        {
+                            entities.Add(map(result));
+                        }
+
+                        return entities;
+                    }
+                }
+            }
         }
     }
 }

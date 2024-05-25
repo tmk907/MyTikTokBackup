@@ -34,14 +34,14 @@ namespace MyTikTokBackup.Desktop
             Ioc.Default.ConfigureServices(ConfigureServices());
             RegisterNavigation();
 
-            var helper = new Core.Database.DatabaseHelper();
-            helper.EnsureCreated();
-
             Log.Logger = new LoggerConfiguration()
                .MinimumLevel.Debug()
                .WriteTo.File(SettingsFiles.LogsFile, rollingInterval: RollingInterval.Day)
                .WriteTo.Debug()
                .CreateLogger();
+
+            var helper = new Core.Database.DatabaseHelper();
+            helper.EnsureCreated();
         }
 
         private void RegisterNavigation()

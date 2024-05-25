@@ -53,7 +53,12 @@ namespace MyTikTokBackup.Core.Services
             try
             {
                 Directory.CreateDirectory(folderPath);
-                var filePath = Path.Combine(folderPath, $"{filename}{GetExtension(url)}");
+                var extension = GetExtension(url);
+                if (string.IsNullOrEmpty(extension) && folderPath == _musicFolder)
+                {
+                    extension = ".mp3";
+                }
+                var filePath = Path.Combine(folderPath, $"{filename}{extension}");
                 if (File.Exists(filePath))
                 {
                     return;
