@@ -27,7 +27,7 @@ namespace MyTikTokBackup.Core.TikTok
 
         [JsonProperty("original")]
         public bool Original { get; set; }
-
+        
         [JsonProperty("duration")]
         public long Duration { get; set; }
 

@@ -24,7 +24,7 @@ namespace MyTikTokBackup.Core.TikTok
 
         [JsonProperty("signature")]
         public string Signature { get; set; }
-
+        
         [JsonProperty("verified")]
         public bool Verified { get; set; }
 
@@ -33,18 +33,28 @@ namespace MyTikTokBackup.Core.TikTok
 
         [JsonProperty("secret")]
         public bool Secret { get; set; }
-
+       
         [JsonProperty("ftc")]
         public bool Ftc { get; set; }
 
         [JsonProperty("relation")]
         public long Relation { get; set; }
 
+
+        [JsonProperty("isADVirtual")]
+        public bool IsADVirtual { get; set; }
+
+        [JsonProperty("isEmbedBanned")]
+        public bool IsEmbedBanned { get; set; }
+
         [JsonProperty("openFavorite")]
         public bool OpenFavorite { get; set; }
 
         [JsonProperty("commentSetting")]
         public long CommentSetting { get; set; }
+
+        [JsonProperty("downloadSetting")]
+        public int DownloadSetting { get; set; }
 
         [JsonProperty("duetSetting")]
         public long DuetSetting { get; set; }
