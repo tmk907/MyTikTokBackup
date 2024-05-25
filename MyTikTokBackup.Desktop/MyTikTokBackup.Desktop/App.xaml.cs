@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Toolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Core.Repositories;

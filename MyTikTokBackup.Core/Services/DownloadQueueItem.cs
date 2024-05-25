@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Toolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Serilog;
 using MyTikTokBackup.Core.Messages;
 using MyTikTokBackup.Core.Models;
