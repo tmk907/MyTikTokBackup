@@ -15,8 +15,8 @@ using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Core.TikTok;
 using MyTikTokBackup.Core.TikTok.UserData;
 using MyTikTokBackup.Core.TikTok.Website;
-using MyTikTokBackup.WindowsUWP.Helpers;
 using Serilog;
+using MyTikTokBackup.Desktop.Services;
 
 namespace MyTikTokBackup.Desktop.ViewModels
 {

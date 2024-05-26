@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\MyTikTokBackup.WindowsUWP\MyTikTokBackup.WindowsUWP.csproj" />
+    <ProjectReference Include="..\..\MyTikTokBackup.Core\MyTikTokBackup.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

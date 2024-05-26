@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MyTikTokBackup.Core.Services;
-using MyTikTokBackup.WindowsUWP.Helpers;
+using MyTikTokBackup.Desktop.Services;
 using Windows.ApplicationModel;
 
 namespace MyTikTokBackup.Desktop.ViewModels

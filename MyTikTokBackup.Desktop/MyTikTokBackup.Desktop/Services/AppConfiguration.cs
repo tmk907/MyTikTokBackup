@@ -1,18 +1,17 @@
 ﻿using System;
 using System.IO;
 using MyTikTokBackup.Core.Services;
-using MyTikTokBackup.WindowsUWP.Helpers;
 using Windows.Storage;
 using Xamarin.Essentials;
 
-namespace MyTikTokBackup.WindowsUWP.Services
+namespace MyTikTokBackup.Desktop.Services
 {
     public class AppConfiguration : IAppConfiguration
     {
-        public string DownloadsFolder 
+        public string DownloadsFolder
         {
             get { return Preferences.Get(nameof(DownloadsFolder), DownloadsFolderPath); }
-            set { Preferences.Set(nameof(DownloadsFolder), value); } 
+            set { Preferences.Set(nameof(DownloadsFolder), value); }
         }
 
         public string Categories => SettingsFiles.Categories;
@@ -91,40 +90,40 @@ namespace Xamarin.Essentials
             PlatformClear(sharedName);
 
         public static string Get(string key, string defaultValue, string sharedName) =>
-            PlatformGet<string>(key, defaultValue, sharedName);
+            PlatformGet(key, defaultValue, sharedName);
 
         public static bool Get(string key, bool defaultValue, string sharedName) =>
-            PlatformGet<bool>(key, defaultValue, sharedName);
+            PlatformGet(key, defaultValue, sharedName);
 
         public static int Get(string key, int defaultValue, string sharedName) =>
-            PlatformGet<int>(key, defaultValue, sharedName);
+            PlatformGet(key, defaultValue, sharedName);
 
         public static double Get(string key, double defaultValue, string sharedName) =>
-            PlatformGet<double>(key, defaultValue, sharedName);
+            PlatformGet(key, defaultValue, sharedName);
 
         public static float Get(string key, float defaultValue, string sharedName) =>
-            PlatformGet<float>(key, defaultValue, sharedName);
+            PlatformGet(key, defaultValue, sharedName);
 
         public static long Get(string key, long defaultValue, string sharedName) =>
-            PlatformGet<long>(key, defaultValue, sharedName);
+            PlatformGet(key, defaultValue, sharedName);
 
         public static void Set(string key, string value, string sharedName) =>
-            PlatformSet<string>(key, value, sharedName);
+            PlatformSet(key, value, sharedName);
 
         public static void Set(string key, bool value, string sharedName) =>
-            PlatformSet<bool>(key, value, sharedName);
+            PlatformSet(key, value, sharedName);
 
         public static void Set(string key, int value, string sharedName) =>
-            PlatformSet<int>(key, value, sharedName);
+            PlatformSet(key, value, sharedName);
 
         public static void Set(string key, double value, string sharedName) =>
-            PlatformSet<double>(key, value, sharedName);
+            PlatformSet(key, value, sharedName);
 
         public static void Set(string key, float value, string sharedName) =>
-            PlatformSet<float>(key, value, sharedName);
+            PlatformSet(key, value, sharedName);
 
         public static void Set(string key, long value, string sharedName) =>
-            PlatformSet<long>(key, value, sharedName);
+            PlatformSet(key, value, sharedName);
 
         // DateTime
 
@@ -135,10 +134,10 @@ namespace Xamarin.Essentials
             Set(key, value, null);
 
         public static DateTime Get(string key, DateTime defaultValue, string sharedName) =>
-            DateTime.FromBinary(PlatformGet<long>(key, defaultValue.ToBinary(), sharedName));
+            DateTime.FromBinary(PlatformGet(key, defaultValue.ToBinary(), sharedName));
 
         public static void Set(string key, DateTime value, string sharedName) =>
-            PlatformSet<long>(key, value.ToBinary(), sharedName);
+            PlatformSet(key, value.ToBinary(), sharedName);
 
         static readonly object locker = new object();
 

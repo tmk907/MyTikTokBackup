@@ -9,8 +9,6 @@ using MyTikTokBackup.Desktop.Services;
 using MyTikTokBackup.Desktop.ViewModels;
 using MyTikTokBackup.Desktop.Views;
 using WinRT;
-using MyTikTokBackup.WindowsUWP.Services;
-using MyTikTokBackup.WindowsUWP.Helpers;
 using Serilog;
 
 // To learn more about WinUI, the WinUI project structure,

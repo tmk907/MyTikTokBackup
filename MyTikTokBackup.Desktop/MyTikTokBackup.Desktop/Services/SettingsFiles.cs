@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Windows.Storage;
 
-namespace MyTikTokBackup.WindowsUWP.Helpers
+namespace MyTikTokBackup.Desktop.Services
 {
     public static class SettingsFiles
     {

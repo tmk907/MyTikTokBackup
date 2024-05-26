@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MyTikTokBackup.Core.Services;
-using MyTikTokBackup.WindowsUWP.Helpers;
 using Windows.Storage;
 using Windows.System;
 
-namespace MyTikTokBackup.WindowsUWP.Services
+namespace MyTikTokBackup.Desktop.Services
 {
     public class StorageService : IStorageService
     {

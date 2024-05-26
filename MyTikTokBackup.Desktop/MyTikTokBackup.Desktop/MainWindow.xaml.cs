@@ -7,7 +7,6 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using MyTikTokBackup.Desktop.Services;
 using MyTikTokBackup.Desktop.Views;
-using MyTikTokBackup.WindowsUWP.Services;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.

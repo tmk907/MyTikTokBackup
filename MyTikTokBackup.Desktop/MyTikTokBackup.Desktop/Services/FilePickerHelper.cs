@@ -6,16 +6,16 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using WinRT;
 
-namespace MyTikTokBackup.WindowsUWP.Helpers
+namespace MyTikTokBackup.Desktop.Services
 {
     public class FilePickerHelper
     {
-        public static void Init(IntPtr windowHandle)
+        public static void Init(nint windowHandle)
         {
             _windowHandle = windowHandle;
         }
 
-        private static IntPtr _windowHandle;
+        private static nint _windowHandle;
 
         public static async Task<StorageFile> PickFile(IEnumerable<string> fileTypes)
         {
@@ -27,7 +27,7 @@ namespace MyTikTokBackup.WindowsUWP.Helpers
                     picker.FileTypeFilter.Add(fileType);
                 }
 
-                IntPtr windowHandle = _windowHandle;
+                nint windowHandle = _windowHandle;
                 var initializeWithWindow = picker.As<IInitializeWithWindow>();
                 initializeWithWindow.Initialize(windowHandle);
 
@@ -47,7 +47,7 @@ namespace MyTikTokBackup.WindowsUWP.Helpers
                 picker.FileTypeFilter.Add("*");
                 picker.SuggestedStartLocation = PickerLocationId.Downloads;
 
-                IntPtr windowHandle = _windowHandle;
+                nint windowHandle = _windowHandle;
                 var initializeWithWindow = picker.As<IInitializeWithWindow>();
                 initializeWithWindow.Initialize(windowHandle);
 
@@ -62,7 +62,7 @@ namespace MyTikTokBackup.WindowsUWP.Helpers
         [ComImport, Guid("3E68D4BD-7135-4D10-8018-9FB6D9F33FA1"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         public interface IInitializeWithWindow
         {
-            void Initialize([In] IntPtr hwnd);
+            void Initialize([In] nint hwnd);
         }
     }
 }

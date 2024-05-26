@@ -6,7 +6,7 @@ using System.Text;
 using Windows.ApplicationModel;
 using Xamarin.Essentials;
 
-namespace MyTikTokBackup.WindowsUWP.Services
+namespace MyTikTokBackup.Desktop.Services
 {
     public class VersionTracking
     {
@@ -65,7 +65,7 @@ namespace MyTikTokBackup.WindowsUWP.Services
 
         public static string CurrentVersion
         {
-            get 
+            get
             {
                 var version = Package.Current.Id.Version;
                 return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
@@ -122,7 +122,7 @@ namespace MyTikTokBackup.WindowsUWP.Services
         static string GetPrevious(string key)
         {
             var trail = versionTrail[key];
-            return (trail.Count >= 2) ? trail[trail.Count - 2] : null;
+            return trail.Count >= 2 ? trail[trail.Count - 2] : null;
         }
     }
 }
