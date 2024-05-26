@@ -116,6 +116,7 @@ namespace MyTikTokBackup.Desktop.Views
             {
                 var idsJson = await webview.CoreWebView2.ExecuteScriptAsync(js);
                 var ids = System.Text.Json.JsonSerializer.Deserialize<string[]>(idsJson);
+                if (ids == null) return videos;
 
                 foreach (var id in ids)
                 {

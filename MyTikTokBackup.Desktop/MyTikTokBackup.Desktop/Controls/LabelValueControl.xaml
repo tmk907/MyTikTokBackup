@@ -8,9 +8,12 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
-        <TextBlock FontSize="18" Text="{x:Bind Label}" />
         <TextBlock
-            FontSize="17"
+            FontSize="14"
+            FontWeight="SemiBold"
+            Text="{x:Bind Label}" />
+        <TextBlock
+            FontSize="14"
             IsTextSelectionEnabled="True"
             Text="{x:Bind Value, Mode=OneWay}" />
     </StackPanel>

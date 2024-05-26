@@ -135,7 +135,14 @@ namespace MyTikTokBackup.Desktop.Views
             webView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
             if (VM.SelectedVideo != null)
             {
-                webView.CoreWebView2.Navigate(VM.SelectedVideo.Url);
+                if (VM.SelectedVideo.Url == null)
+                {
+                    Log.Warning("SelectedVideo Url is null. VideoId: {0}", VM.SelectedVideo.Video.VideoId);
+                }
+                else
+                {
+                    webView.CoreWebView2.Navigate(VM.SelectedVideo.Url);
+                }
             }
             loaded = true;
         }
@@ -183,7 +190,14 @@ namespace MyTikTokBackup.Desktop.Views
             }
             if (videoPivot.SelectedIndex == 1 && loaded)
             {
-                webView.CoreWebView2.Navigate(VM.SelectedVideo.Url);
+                if (VM.SelectedVideo.Url == null)
+                {
+                    Log.Warning("SelectedVideo Url is null. VideoId: {0}", VM.SelectedVideo.Video.VideoId);
+                }
+                else
+                {
+                    webView.CoreWebView2.Navigate(VM.SelectedVideo.Url);
+                }
             }
         }
 
@@ -246,7 +260,14 @@ namespace MyTikTokBackup.Desktop.Views
             if (!loaded) return;
             if (videoPivot.SelectedIndex == 1)
             {
-                webView.CoreWebView2.Navigate(VM.SelectedVideo.Url);
+                if (VM.SelectedVideo.Url == null)
+                {
+                    Log.Warning("SelectedVideo Url is null. VideoId: {0}", VM.SelectedVideo.Video.VideoId);
+                }
+                else
+                {
+                    webView.CoreWebView2.Navigate(VM.SelectedVideo.Url);
+                }
             }
             else
             {

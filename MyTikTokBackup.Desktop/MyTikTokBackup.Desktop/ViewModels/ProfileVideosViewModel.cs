@@ -151,6 +151,30 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 idToPath.TryAdd(id, path);
             }
 
+            foreach(var item in profileVideos.Where(x=> x.Video.Author == null))
+            {
+                item.Video.Author = new Author
+                {
+                    Id = "",
+                    Nickname = "",
+                    Signature = "",
+                    Stats = new AuthorStats(),
+                    UniqueId = ""
+                };
+            }
+
+            foreach (var item in profileVideos.Where(x => x.Video.Music == null))
+            {
+                item.Video.Music = new Music
+                {
+                    Album = "",
+                    AuthorName = "",
+                    Duration = TimeSpan.Zero,
+                    Id = "",
+                    Title = ""
+                };
+            }
+
             videos = profileVideos.Select(item => new VideoUI
             {
                 Video = item.Video,

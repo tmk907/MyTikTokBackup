@@ -19,6 +19,7 @@ namespace MyTikTokBackup.Core.Database
             db.Database.EnsureCreated();
 
             Migration1(db);
+            Migration1b(db);
             Migration2(db);
         }
 
@@ -45,6 +46,41 @@ namespace MyTikTokBackup.Core.Database
                 catch (Exception ex)
                 {
                     Log.Error("Error while migrating database to v1");
+                    Log.Error(ex.ToString());
+                    throw;
+                }
+            }
+        }
+
+        private void Migration1b(TikTokDbContext db)
+        {
+            var rowCount = EFCoreHelper.RawSqlQuery<int>(
+                """
+                select count(*) from pragma_table_info('VideoCategories')
+                """, dbReader => dbReader.GetFieldValue<int>(0));
+
+            if (rowCount.Count == 0)
+            {
+                try
+                {
+                    var sql =
+                    """
+                    CREATE TABLE "VideoCategories" (
+                        "Id" INTEGER NOT NULL CONSTRAINT "PK_VideoCategories" PRIMARY KEY AUTOINCREMENT,
+                        "CategoryName" TEXT NOT NULL,
+                        "VideoId" INTEGER NOT NULL,
+                        CONSTRAINT "FK_VideoCategories_Categories_Name" FOREIGN KEY ("CategoryName") REFERENCES "Categories" ("Name") ON DELETE NO ACTION,
+                        CONSTRAINT "FK_VideoCategories_Videos_Id" FOREIGN KEY ("VideoId") REFERENCES "Videos" ("Id") ON DELETE NO ACTION
+                    )
+                    """;
+
+                    db.Database.ExecuteSqlRaw(sql);
+                    db.SaveChanges();
+                    Log.Information($"Database {db.DatabaseFolder} migrated to v1b");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Error while migrating database to v1b");
                     Log.Error(ex.ToString());
                     throw;
                 }
@@ -112,6 +148,8 @@ namespace MyTikTokBackup.Core.Database
                 }
             }
         }
+
+
 
         public async Task AddOrUpdateProfileVideos(string userUniqueId, FeedType feedType, IEnumerable<string> newVideos)
         {

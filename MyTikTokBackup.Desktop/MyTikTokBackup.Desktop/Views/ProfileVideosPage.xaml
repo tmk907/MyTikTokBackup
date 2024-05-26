@@ -32,7 +32,7 @@
                     QuerySubmitted="SearchBox_QuerySubmitted"
                     Text="{x:Bind VM.Query, Mode=TwoWay}"
                     TextChanged="SearchBox_TextChanged" />
-                <controls:CategoriesFilterControl CategorySelectionChanged="CategoriesFilterControl_CategorySelectionChanged"/>
+                <controls:CategoriesFilterControl CategorySelectionChanged="CategoriesFilterControl_CategorySelectionChanged" />
             </StackPanel>
             <Grid Grid.Row="1">
                 <ListView
