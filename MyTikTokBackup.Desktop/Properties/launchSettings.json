@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MyTikTokBackup.Desktop (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "MyTikTokBackup.Desktop (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
