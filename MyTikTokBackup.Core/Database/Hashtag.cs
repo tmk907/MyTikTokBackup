@@ -5,8 +5,10 @@ namespace MyTikTokBackup.Core.Database
 {
     public class Hashtag
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
+        public string? OldId { get; set; }
+
         public ICollection<Video> Videos { get; set; }
 
         public override bool Equals(object obj)

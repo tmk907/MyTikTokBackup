@@ -13,17 +13,19 @@ namespace MyTikTokBackup.Core.Services
     {
         public async Task AddOrUpdateMetadataFromVideo(ItemInfo item)
         {
-            var author = await AddOrUpdateAuthor(item);
-            var hashTags = await AddOrUpdateHashtags(item);
-            var music = await AddOrUpdateMusic(item);
-            await AddOrUpdateVideo(item, author, music, hashTags);
+            using var db = new TikTokDbContext();
+
+            var author = await AddOrUpdateAuthor(item, db);
+            var hashTags = await AddOrUpdateHashtags(item,db);
+            var music = await AddOrUpdateMusic(item,db);
+            await AddOrUpdateVideo(item, author, music, hashTags,db);
         }
 
-        private async Task<Database.Author> AddOrUpdateAuthor(ItemInfo item)
+        private async Task<Database.Author> AddOrUpdateAuthor(ItemInfo item, TikTokDbContext db)
         {
             try
             {
-                using var db = new TikTokDbContext();
+                
                 var author = await db.Authors.Include(x => x.Stats).FirstOrDefaultAsync(x => x.Id == item.Author.Id);
                 if (author == null)
                 {
@@ -35,11 +37,11 @@ namespace MyTikTokBackup.Core.Services
                         UniqueId = item.Author.UniqueId
                     };
                     author.Stats = Database.AuthorStats.Create(
-                        item.AuthorStats.DiggCount,
-                        item.AuthorStats.FollowerCount,
-                        item.AuthorStats.FollowingCount,
-                        item.AuthorStats.HeartCount,
-                        item.AuthorStats.VideoCount
+                        item.AuthorStats?.DiggCount ?? 0,
+                        item.AuthorStats?.FollowerCount ?? 0,
+                        item.AuthorStats?.FollowingCount ?? 0,
+                        item.AuthorStats?.HeartCount ?? 0,
+                        item.AuthorStats?.VideoCount ?? 0
                     );
                     db.Authors.Add(author);
                 }
@@ -47,11 +49,11 @@ namespace MyTikTokBackup.Core.Services
                 {
                     db.Remove(author.Stats);
                     author.Stats = Database.AuthorStats.Create(
-                        item.AuthorStats.DiggCount,
-                        item.AuthorStats.FollowerCount,
-                        item.AuthorStats.FollowingCount,
-                        item.AuthorStats.HeartCount,
-                        item.AuthorStats.VideoCount
+                        item.AuthorStats?.DiggCount ?? 0,
+                        item.AuthorStats?.FollowerCount ?? 0,
+                        item.AuthorStats?.FollowingCount ?? 0,
+                        item.AuthorStats?.HeartCount ?? 0,
+                        item.AuthorStats?.VideoCount ?? 0
                     );
                     db.Authors.Update(author);
                 }
@@ -67,11 +69,10 @@ namespace MyTikTokBackup.Core.Services
             }
         }
 
-        private async Task<Database.Music> AddOrUpdateMusic(ItemInfo item)
+        private async Task<Database.Music> AddOrUpdateMusic(ItemInfo item, TikTokDbContext db)
         {
             try
             {
-                using var db = new TikTokDbContext();
                 var music = await db.Musics.FirstOrDefaultAsync(x => x.Id == item.Music.Id);
                 if (music == null)
                 {
@@ -95,16 +96,14 @@ namespace MyTikTokBackup.Core.Services
             }
         }
 
-        private async Task<IEnumerable<Hashtag>> AddOrUpdateHashtags(ItemInfo item)
+        private async Task<IEnumerable<Hashtag>> AddOrUpdateHashtags(ItemInfo item, TikTokDbContext db)
         {
             if(item.TextExtra == null) return new List<Hashtag>();
             try
             {
-                using var db = new TikTokDbContext();
-
                 var hashtags = item.TextExtra
-                    .Where(x => !string.IsNullOrEmpty(x.HashtagId) && !string.IsNullOrEmpty(x.HashtagName))
-                    .Select(x => new Hashtag { Id = x.HashtagId, Name = x.HashtagName });
+                    .Where(x => !string.IsNullOrEmpty(x.HashtagName))
+                    .Select(x => new Hashtag { Name = x.HashtagName });
                 var hashtagNames = hashtags.Select(x => x.Name).ToList();
                 var fromDb = await db.Hashtags.Where(x => hashtagNames.Contains(x.Name)).ToListAsync();
                 var toInsert = hashtags.Except(fromDb);
@@ -121,11 +120,10 @@ namespace MyTikTokBackup.Core.Services
             }
         }
 
-        private async Task<Database.Video> AddOrUpdateVideo(ItemInfo item, Database.Author author, Database.Music music, IEnumerable<Hashtag> hashtags)
+        private async Task<Database.Video> AddOrUpdateVideo(ItemInfo item, Database.Author author, Database.Music music, IEnumerable<Hashtag> hashtags, TikTokDbContext db)
         {
             try
             {
-                using var db = new TikTokDbContext();
 
                 var video = await db.Videos.FirstOrDefaultAsync(x => x.VideoId == item.Video.Id);
                 if (video == null)
@@ -134,7 +132,7 @@ namespace MyTikTokBackup.Core.Services
                     {
                         Author = author,
                         Description = item.Desc,
-                        DuetFromId = item.DuetInfo?.DuetFromId,
+                        DuetFromId = "",//item.DuetInfo?.DuetFromId,
                         Duration = TimeSpan.FromSeconds(item.Video.Duration),
                         Hashtags = hashtags.ToList(),
                         Height = (int)item.Video.Height,
@@ -149,7 +147,7 @@ namespace MyTikTokBackup.Core.Services
                         ),
                         Width = (int)item.Video.Width
                     };
-                    db.Videos.Update(video);
+                    db.Videos.Add(video);
                 }
                 else
                 {

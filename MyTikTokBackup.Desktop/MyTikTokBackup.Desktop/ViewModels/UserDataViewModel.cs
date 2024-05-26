@@ -8,8 +8,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Flurl.Http;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Microsoft.Toolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Core.TikTok;
@@ -33,7 +33,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             _flurlClient = new FlurlClient()
                 .WithAutoRedirect(false)
-                .AllowHttpStatus(new[] { System.Net.HttpStatusCode.Redirect, System.Net.HttpStatusCode.Moved });
+                .AllowHttpStatus(new[] { (int)System.Net.HttpStatusCode.Redirect, (int)System.Net.HttpStatusCode.Moved });
 
             _flurlClient2 = new FlurlClient()
                 .WithHeader("User-Agent", userAgent)
@@ -259,7 +259,8 @@ namespace MyTikTokBackup.Desktop.ViewModels
             {
                 if (url.Contains("tiktokv.com/share"))
                 {
-                    var response = await _flurlClient.Request(url).GetAsync(token);
+                    var response = await _flurlClient.Request(url)
+                        .GetAsync(System.Net.Http.HttpCompletionOption.ResponseContentRead,token);
                     response.Headers.TryGetFirst("Location", out url);
                 }
                 if (url.Contains("tiktok.com/share"))

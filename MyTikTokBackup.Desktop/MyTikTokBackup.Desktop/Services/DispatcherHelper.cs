@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using MyTikTokBackup.Core.Services;
-using Microsoft.Toolkit.Uwp.Extensions;
+using CommunityToolkit.Uwp.Extensions;
 using Serilog;
 using Microsoft.UI.Dispatching;
 
