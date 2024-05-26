@@ -25,7 +25,6 @@ namespace MyTikTokBackup.Core.Services
         {
             try
             {
-                
                 var author = await db.Authors.Include(x => x.Stats).FirstOrDefaultAsync(x => x.Id == item.Author.Id);
                 if (author == null)
                 {
@@ -47,25 +46,29 @@ namespace MyTikTokBackup.Core.Services
                 }
                 else
                 {
-                    db.Remove(author.Stats);
-                    author.Stats = Database.AuthorStats.Create(
-                        item.AuthorStats?.DiggCount ?? 0,
-                        item.AuthorStats?.FollowerCount ?? 0,
-                        item.AuthorStats?.FollowingCount ?? 0,
-                        item.AuthorStats?.HeartCount ?? 0,
-                        item.AuthorStats?.VideoCount ?? 0
-                    );
+                    author.Stats.DiggCount = item.AuthorStats?.DiggCount ?? 0;
+                    author.Stats.FollowerCount = item.AuthorStats?.FollowerCount ?? 0;
+                    author.Stats.FollowingCount = item.AuthorStats?.FollowingCount ?? 0;
+                    author.Stats.HeartCount = item.AuthorStats?.HeartCount ?? 0;
+                    author.Stats.VideoCount = item.AuthorStats?.VideoCount ?? 0;
                     db.Authors.Update(author);
                 }
 
-                //AddOrUpdate(db, author);
                 await db.SaveChangesAsync();
                 return author;
             }
             catch (Exception ex)
             {
-                Log.Error(ex.ToString());
-                return null;
+                try
+                {
+                    var author = await db.Authors.FindAsync(item.Author.Id);
+                    return author;
+                }
+                catch 
+                {
+                    Log.Error(ex.ToString());
+                    return null;
+                }
             }
         }
 
@@ -91,8 +94,16 @@ namespace MyTikTokBackup.Core.Services
             }
             catch (Exception ex)
             {
-                Log.Error(ex.ToString());
-                return null;
+                try
+                {
+                    var music = await db.Musics.FindAsync(item.Music.Id);
+                    return music;
+                }
+                catch
+                {
+                    Log.Error(ex.ToString());
+                    return null;
+                }
             }
         }
 
@@ -130,14 +141,12 @@ namespace MyTikTokBackup.Core.Services
                 {
                     video = new Database.Video
                     {
-                        Author = author,
                         Description = item.Desc,
                         DuetFromId = "",//item.DuetInfo?.DuetFromId,
                         Duration = TimeSpan.FromSeconds(item.Video.Duration),
                         Hashtags = hashtags.ToList(),
                         Height = (int)item.Video.Height,
                         VideoId = item.Video.Id,
-                        Music = music,
                         Ratio = item.Video.Ratio,
                         Stats = VideoStats.Create(
                            item.Stats.CommentCount,
@@ -148,6 +157,12 @@ namespace MyTikTokBackup.Core.Services
                         Width = (int)item.Video.Width
                     };
                     db.Videos.Add(video);
+                    await db.SaveChangesAsync();
+
+                    video.AuthorId = author.Id;
+                    video.MusicId = music.Id;
+                    db.Videos.Update(video);
+                    await db.SaveChangesAsync();
                 }
                 else
                 {
@@ -159,9 +174,9 @@ namespace MyTikTokBackup.Core.Services
                         item.Stats.ShareCount
                     );
                     db.Videos.Update(video);
+                    await db.SaveChangesAsync();
                 }
 
-                await db.SaveChangesAsync();
 
                 return video;
             }

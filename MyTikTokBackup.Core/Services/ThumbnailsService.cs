@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -12,11 +13,10 @@ namespace MyTikTokBackup.Core.Services
     public class ThumbnailsService
     {
         private readonly string _thumbnailsFolder;
-
-        private string _authorFolder;
-        private string _musicFolder;
-
-        private HttpClient _client;
+        private readonly string _authorFolder;
+        private readonly string _musicFolder;
+        private readonly HttpClient _client;
+        private readonly ConcurrentDictionary<string, bool> _downloads;
 
         public ThumbnailsService()
         {
@@ -25,6 +25,7 @@ namespace MyTikTokBackup.Core.Services
             _authorFolder = Path.Combine(_thumbnailsFolder, "Author");
             _musicFolder = Path.Combine(_thumbnailsFolder, "Music");
             _client = new HttpClient();
+            _downloads = new ConcurrentDictionary<string, bool>();
         }
 
         public async Task DownloadThumbnailsAsync(ItemInfo item, CancellationToken cancellationToken)
@@ -52,22 +53,30 @@ namespace MyTikTokBackup.Core.Services
         {
             try
             {
-                Directory.CreateDirectory(folderPath);
-                var extension = GetExtension(url);
-                if (string.IsNullOrEmpty(extension) && folderPath == _musicFolder)
+                if (_downloads.TryAdd(url, false))
                 {
-                    extension = ".mp3";
+                    Directory.CreateDirectory(folderPath);
+                    var extension = GetExtension(url);
+                    if (string.IsNullOrEmpty(extension) && folderPath == _musicFolder)
+                    {
+                        extension = ".mp3";
+                    }
+                    var filePath = Path.Combine(folderPath, $"{filename}{extension}");
+                    if (File.Exists(filePath))
+                    {
+                        return;
+                    }
+                    await DownloadAsync(url, filePath, cancellationToken).ConfigureAwait(false);
+                    if (!_downloads.TryRemove(url, out bool _))
+                    {
+                        Log.Error("DownloadAsync could not remove key {0}", url);
+                    }
                 }
-                var filePath = Path.Combine(folderPath, $"{filename}{extension}");
-                if (File.Exists(filePath))
-                {
-                    return;
-                }
-                await DownloadAsync(url, filePath, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Download {Filename}", filename);
+                _downloads.TryRemove(url, out bool _);
             }
         }
 

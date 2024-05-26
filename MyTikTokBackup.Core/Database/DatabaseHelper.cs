@@ -59,7 +59,7 @@ namespace MyTikTokBackup.Core.Database
                 select count(*) from pragma_table_info('VideoCategories')
                 """, dbReader => dbReader.GetFieldValue<int>(0));
 
-            if (rowCount.Count == 0)
+            if (rowCount.FirstOrDefault() == 0)
             {
                 try
                 {

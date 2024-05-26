@@ -50,7 +50,7 @@
         </ItemsRepeater>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal">
-            <Button>
+            <Button ToolTipService.ToolTip="Add new category">
                 <Button.Content>
                     <SymbolIcon Symbol="Add" />
                 </Button.Content>

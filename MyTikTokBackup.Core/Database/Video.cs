@@ -16,7 +16,9 @@ namespace MyTikTokBackup.Core.Database
         public string Ratio { get; set; }
         public VideoStats Stats { get; set; }
 
+        public string AuthorId { get; set; }
         public Author Author { get; set; }
+        public string MusicId { get; set; }
         public Music Music { get; set; }
         public ICollection<Hashtag> Hashtags { get; set; }
         public ICollection<Category> Categories { get; set; }
