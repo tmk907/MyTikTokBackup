@@ -9,7 +9,7 @@
 
   <Identity
 	Name="60490polApki.MyTikTokBackupDev"
-	Publisher="CN=EFEE17C1-DC2A-4553-8CE6-82B55CBC72FE"
+	Publisher="CN=tmk907"
 	Version="1.1.16.0" />
 
   <mp:PhoneIdentity PhoneProductId="95900f18-6054-47ac-afd7-63e14c5259a5" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
