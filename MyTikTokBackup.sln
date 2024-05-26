@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTikTokBackup.Desktop", "M
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTikTokBackup.Tests", "MyTikTokBackup.Tests\MyTikTokBackup.Tests.csproj", "{52338567-3774-4BC1-8853-E4F50D7ABAC8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MergeTikTokFolders", "MergeTikTokFolders\MergeTikTokFolders.csproj", "{F99897F5-2BC0-45E9-B269-D32EE0CF384F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +109,22 @@ Global
 		{52338567-3774-4BC1-8853-E4F50D7ABAC8}.Release|x64.Build.0 = Release|Any CPU
 		{52338567-3774-4BC1-8853-E4F50D7ABAC8}.Release|x86.ActiveCfg = Release|Any CPU
 		{52338567-3774-4BC1-8853-E4F50D7ABAC8}.Release|x86.Build.0 = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|arm64.Build.0 = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|x64.Build.0 = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Debug|x86.Build.0 = Debug|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|arm64.ActiveCfg = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|arm64.Build.0 = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|x64.ActiveCfg = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|x64.Build.0 = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|x86.ActiveCfg = Release|Any CPU
+		{F99897F5-2BC0-45E9-B269-D32EE0CF384F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

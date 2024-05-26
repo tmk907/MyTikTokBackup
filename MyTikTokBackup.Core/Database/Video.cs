@@ -14,12 +14,12 @@ namespace MyTikTokBackup.Core.Database
         public int Height { get; set; }
         public int Width { get; set; }
         public string Ratio { get; set; }
-        public int MyProperty { get; set; }
         public VideoStats Stats { get; set; }
 
         public Author Author { get; set; }
         public Music Music { get; set; }
         public ICollection<Hashtag> Hashtags { get; set; }
+        public ICollection<Category> Categories { get; set; }
     }
 
     public class VideoStats
