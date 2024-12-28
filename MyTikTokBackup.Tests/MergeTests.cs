@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using MyTikTokBackup.Core.Database;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace MyTikTokBackup.Tests
 {
