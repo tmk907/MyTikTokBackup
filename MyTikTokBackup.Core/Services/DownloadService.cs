@@ -27,7 +27,7 @@ namespace MyTikTokBackup.Core.Services
         IEnumerable<IDownloadQueueItem> ItemsToDownload { get; }
 
         void Cancel();
-        Task QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items);
+        Task QueueVideos(string user, DownloadType type, List<ItemInfo> items);
     }
 
     public class DownloadsManager : IDownloadsManager
@@ -52,38 +52,49 @@ namespace MyTikTokBackup.Core.Services
         private int downloadedCount = 0;
         public IEnumerable<IDownloadQueueItem> ItemsToDownload => _itemsToDownload.Values.ToList();
 
-        public async Task QueueVideos(string user, DownloadType type, IEnumerable<ItemInfo> items)
+        public async Task QueueVideos(string user, DownloadType type, List<ItemInfo> items)
         {
             _localVideosService.Refresh();
             var toDownload = items
                 .Where(x => !_itemsToDownload.ContainsKey(x.Id))
                 .ToList();
             var queue = new List<IDownloadQueueItem>();
-            foreach(var item in toDownload)
+            var errors = new List<ItemInfo>();
+            foreach (var item in toDownload)
             {
-                if (item.ImagePost?.Images?.Count > 0)
+                try
                 {
-                    var videoSource = new VideoSource(user, type.ToString());
-                    var filePath = PrepareImageFilePath(videoSource, item);
-                    var status = GetStatus(item.Id, item.ImagePost.Images.FirstOrDefault()?.ImageURL.UrlList.FirstOrDefault());
-                    var queueItem = ImagePostDownloadQueueItem.Create(item, videoSource, filePath, status);
-                    queueItem.ItemInfo = item;
-                    queueItem.IsVideoDownloaded = _localVideosService.GetPath(item.Video.Id) != "";
-                    _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
-                    queue.Add(queueItem);
+                    if (item.ImagePost?.Images?.Count > 0)
+                    {
+                        var videoSource = new VideoSource(user, type.ToString());
+                        var filePath = PrepareImageFilePath(videoSource, item);
+                        var status = GetStatus(item.Id, item.ImagePost.Images.FirstOrDefault()?.ImageURL.UrlList.FirstOrDefault());
+                        var queueItem = ImagePostDownloadQueueItem.Create(item, videoSource, filePath, status);
+                        queueItem.ItemInfo = item;
+                        queueItem.IsVideoDownloaded = _localVideosService.GetPath(item.Video.Id) != "";
+                        _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
+                        queue.Add(queueItem);
+                    }
+                    else
+                    {
+                        var videoSource = new VideoSource(user, type.ToString());
+                        var filePath = PrepareFilePath(videoSource, item);
+                        var status = GetStatus(item.Id, item.Video.PlayAddr);
+                        var queueItem = DownloadQueueItem.Create(item, videoSource, filePath, status);
+                        queueItem.ItemInfo = item;
+                        queueItem.IsVideoDownloaded = _localVideosService.GetPath(item.Video.Id) != "";
+                        _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
+                        queue.Add(queueItem);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    var videoSource = new VideoSource(user, type.ToString());
-                    var filePath = PrepareFilePath(videoSource, item);
-                    var status = GetStatus(item.Id, item.Video.PlayAddr);
-                    var queueItem = DownloadQueueItem.Create(item, videoSource, filePath, status);
-                    queueItem.ItemInfo = item;
-                    queueItem.IsVideoDownloaded = _localVideosService.GetPath(item.Video.Id) != "";
-                    _itemsToDownload.TryAdd(queueItem.VideoId, queueItem);
-                    queue.Add(queueItem);
+                    Log.Error(ex, "Can't queue item - age restricted?");
+                    errors.Add(item);
                 }
             }
+            errors.ForEach(x => items.Remove(x));
+
             if (type == DownloadType.Favorite || type == DownloadType.Posted)
             {
                 var t = FeedType.Liked;
@@ -95,7 +106,7 @@ namespace MyTikTokBackup.Core.Services
                 await helper.AddOrUpdateProfileVideos(user, t, items.Select(x => x.Video.Id));
             }
 
-            Log.Information($"{nameof(QueueVideos)} items: {items.Count()}, to download: {toDownload.Count} queue {queue.Count} _itemsToDownload {_itemsToDownload.Count}");
+            Log.Information($"{nameof(QueueVideos)} items: {items.Count()}, to download: {toDownload.Count}, errors: {errors.Count} queue {queue.Count} _itemsToDownload {_itemsToDownload.Count}");
             _downloadService.QueueItems(queue);
         }
 
