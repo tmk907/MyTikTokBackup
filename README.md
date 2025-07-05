@@ -1,10 +1,10 @@
 # MyTikTokBackup
 
-Backup your TikTok videos. Download your favorite and posted videos or any public profile videos.
+Backup your TikTok videos. Download your liked and posted videos or any public profile videos.
 
 ## Features
 * Search for videos in embedded browser
-* Download favorite videos,
+* Download liked videos,
 * Download posted videos,
 * Watch downloaded videos
 
