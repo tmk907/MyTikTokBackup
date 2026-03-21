@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
 	  <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -17,12 +17,12 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Enums.NET" Version="5.0.0" />
     <PackageReference Include="Flurl.Http" Version="4.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.6" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="9.0.6" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="10.0.5" />
   </ItemGroup>
 
 </Project>
