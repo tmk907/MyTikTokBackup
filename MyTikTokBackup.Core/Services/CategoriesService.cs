@@ -9,11 +9,13 @@ namespace MyTikTokBackup.Core.Services
 {
     public interface ICategoriesService
     {
-        Task AddVideoToCategory(Category category, Video video);
+        Task AddVideoToCategory(string categoryName, int videoId);
         Task<Category> CreateCategory(string name);
         Task Delete(string name);
         Task<List<Category>> GetAll();
-        Task RemoveVideoFromCategory(Category category, Video video);
+        Task<Dictionary<int, List<string>>> GetVideoCategories();
+        Task RemoveVideoFromCategory(string categoryName, int videoId);
+        Task Rename(string oldName, string newName);
     }
 
     public class CategoriesService : ICategoriesService
@@ -31,37 +33,69 @@ namespace MyTikTokBackup.Core.Services
         public async Task Delete(string name)
         {
             using var db = new TikTokDbContext();
-            var category = db.Categories.FirstOrDefault(x => x.Name == name);
-            db.Categories.Remove(category);
-            await db.SaveChangesAsync();
-            
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            await db.VideoCategories.Where(x => x.CategoryName == name).ExecuteDeleteAsync();
+            await db.Categories.Where(x => x.Name == name).ExecuteDeleteAsync();
+            await transaction.CommitAsync();
         }
 
-        public Task<List<Category>> GetAll()
+        public async Task Rename(string oldName, string newName)
         {
+            // Name is the primary key and EF Core can't change a key value,
+            // so rename = add new category, re-point links, delete old category.
             using var db = new TikTokDbContext();
-            return db.Categories.ToListAsync();
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            var oldCategory = await db.Categories.AsNoTracking().FirstAsync(x => x.Name == oldName);
+            db.Categories.Add(new Category { Name = newName, Color = oldCategory.Color });
+            await db.SaveChangesAsync();
+            await db.VideoCategories
+                .Where(x => x.CategoryName == oldName)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.CategoryName, newName));
+            await db.Categories.Where(x => x.Name == oldName).ExecuteDeleteAsync();
+            await transaction.CommitAsync();
         }
 
-        public async Task AddVideoToCategory(Category category, Video video)
+        public async Task<List<Category>> GetAll()
         {
             using var db = new TikTokDbContext();
-            db.VideoCategories.Add(new VideoCategory { Category = category, Video = video });
+            return await db.Categories.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<Dictionary<int, List<string>>> GetVideoCategories()
+        {
+            using var db = new TikTokDbContext();
+            var links = await db.VideoCategories
+                .Select(x => new { x.VideoId, x.CategoryName })
+                .ToListAsync();
+
+            return links
+                .GroupBy(x => x.VideoId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.CategoryName).Distinct().ToList());
+        }
+
+        public async Task AddVideoToCategory(string categoryName, int videoId)
+        {
+            using var db = new TikTokDbContext();
+            var exists = await db.VideoCategories.AnyAsync(x => x.CategoryName == categoryName && x.VideoId == videoId);
+            if (exists) return;
+
+            db.VideoCategories.Add(new VideoCategory { CategoryName = categoryName, VideoId = videoId });
             await db.SaveChangesAsync();
         }
 
-        public async Task RemoveVideoFromCategory(Category category, Video video)
+        public async Task RemoveVideoFromCategory(string categoryName, int videoId)
         {
             using var db = new TikTokDbContext();
-            var vc = db.VideoCategories.FirstOrDefault(x => x.Video.Id == video.Id && x.Category.Name == category.Name);
-            db.VideoCategories.Remove(vc);
-            await db.SaveChangesAsync();
+            await db.VideoCategories
+                .Where(x => x.CategoryName == categoryName && x.VideoId == videoId)
+                .ExecuteDeleteAsync();
         }
 
         private async Task<string> GetAvailableColor()
         {
-            var categories = await GetAll();
-            return accentColors.FirstOrDefault(x => !categories.Select(x => x.Color).Contains(x));
+            var usedColors = (await GetAll()).Select(x => x.Color).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            return accentColors.FirstOrDefault(x => !usedColors.Contains(x))
+                ?? accentColors[usedColors.Count % accentColors.Length];
         }
 
         private readonly string[] accentColors = new string[] {

@@ -1,153 +1,127 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using MyTikTokBackup.Core.Services;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
 
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
+namespace MyTikTokBackup.Desktop.Controls;
 
-namespace MyTikTokBackup.Desktop.Controls
+public sealed record CategoryRenameRequest(CategoryItem Category, string NewName);
+
+/// <summary>
+/// Lists categories as toggle buttons used to filter videos. Allows adding, renaming and deleting categories.
+/// The control only collects user intent; the owner performs the actual changes.
+/// </summary>
+public sealed partial class CategoriesFilterControl : UserControl
 {
-    public class CategorySelectionChangedEventArgs : EventArgs
+    public event EventHandler FilterChanged;
+    public event EventHandler<string> AddRequested;
+    public event EventHandler<CategoryRenameRequest> RenameRequested;
+    public event EventHandler<CategoryItem> DeleteRequested;
+
+    public CategoriesFilterControl()
     {
-        public IEnumerable<ICategorySelection> SelectedCategories { get; init; }
+        InitializeComponent();
     }
 
-    public sealed partial class CategoriesFilterControl : UserControl
+    public IList<CategoryItem> Categories
     {
-        private readonly ICategoriesService _categoriesService;
-
-        public event EventHandler<CategorySelectionChangedEventArgs> CategorySelectionChanged;
-
-        public CategoriesFilterControl()
-        {
-            this.InitializeComponent();
-            _categoriesService = Ioc.Default.GetService<ICategoriesService>();
-            Categories = new ObservableCollection<CategoryFilter>();
-            AddCategoryCommand = new AsyncRelayCommand(AddCategory);
-            this.Loaded += CategoriesFilterControl_Loaded;
-        }
-
-        private async void CategoriesFilterControl_Loaded(object sender, RoutedEventArgs e)
-        {
-            var all = await _categoriesService.GetAll();
-            foreach (var x in all.OrderBy(x => x.Name))
-            {
-                var categoryFilter = new CategoryFilter
-                {
-                    ColorHex = x.Color,
-                    Name = x.Name,
-                    IsSelected = false
-                };
-                categoryFilter.PropertyChanged += CategoryFilter_PropertyChanged;
-                Categories.Add(categoryFilter);
-            }
-        }
-
-        private void CategoryFilter_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            CategorySelectionChanged?.Invoke(this, new CategorySelectionChangedEventArgs
-            {
-                SelectedCategories = Categories.Where(x=>x.IsSelected).ToList()
-            });
-        }
-
-        private async Task AddCategory()
-        {
-            if (string.IsNullOrWhiteSpace(NewCategoryName)) return;
-
-            var newCategory = await _categoriesService.CreateCategory(NewCategoryName);
-            var categoryFilter = new CategoryFilter
-            {
-                ColorHex = newCategory.Color,
-                Name = newCategory.Name,
-                IsSelected = false
-            };
-            categoryFilter.PropertyChanged += CategoryFilter_PropertyChanged;
-            Categories.Add(categoryFilter);
-        }
-
-        public string NewCategoryName
-        {
-            get { return (string)GetValue(NewCategoryNameProperty); }
-            set { SetValue(NewCategoryNameProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for NewCategoryName.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty NewCategoryNameProperty =
-            DependencyProperty.Register("NewCategoryName", typeof(string), typeof(CategoriesFilterControl), new PropertyMetadata(null));
-
-        public ICommand AddCategoryCommand
-        {
-            get { return (ICommand)GetValue(AddCategoryCommandProperty); }
-            set { SetValue(AddCategoryCommandProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for AddCategoryCommand.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty AddCategoryCommandProperty =
-            DependencyProperty.Register("AddCategoryCommand", typeof(ICommand), typeof(CategoriesFilterControl), new PropertyMetadata(null));
-
-        public IList<CategoryFilter> Categories
-        {
-            get { return (IList<CategoryFilter>)GetValue(CategoriesProperty); }
-            set { SetValue(CategoriesProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for Categories.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty CategoriesProperty =
-            DependencyProperty.Register("Categories", typeof(IList<CategoryFilter>), typeof(CategoriesFilterControl), new PropertyMetadata(null));
+        get => (IList<CategoryItem>)GetValue(CategoriesProperty);
+        set => SetValue(CategoriesProperty, value);
     }
 
+    public static readonly DependencyProperty CategoriesProperty =
+        DependencyProperty.Register(nameof(Categories), typeof(IList<CategoryItem>), typeof(CategoriesFilterControl), new PropertyMetadata(null));
 
-    public interface ICategorySelection
+    private bool IsNameAvailable(string name, CategoryItem except = null) =>
+        Categories?.Any(x => x != except && string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase)) != true;
+
+    private void Category_Click(object sender, RoutedEventArgs e) => FilterChanged?.Invoke(this, EventArgs.Empty);
+
+    private void AddCategoryFlyout_Opened(object sender, object e)
     {
-        public bool IsSelected { get; set; }
-        public string Name { get; set; }
-        public string ColorHex { get; set; }
+        NewCategoryTextBox.Text = string.Empty;
+        NewCategoryTextBox.Focus(FocusState.Programmatic);
     }
 
-    public class CategorySelection : ObservableObject, ICategorySelection
+    private void NewCategoryTextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        public CategorySelection(string name, string color)
-        {
-            Name = name;
-            ColorHex = color;
-            IsSelected = true;
-        }
-
-        public CategorySelection()
-        {
-        }
-
-        protected bool isSelected;
-        public bool IsSelected
-        {
-            get { return isSelected; }
-            set { SetProperty(ref isSelected, value); }
-        }
-
-        public string Name { get; set; }
-        public string ColorHex { get; set; }
+        var name = NewCategoryTextBox.Text.Trim();
+        var isAvailable = IsNameAvailable(name);
+        NewCategoryError.Visibility = isAvailable ? Visibility.Collapsed : Visibility.Visible;
+        ConfirmAddCategoryButton.IsEnabled = name.Length > 0 && isAvailable;
     }
 
-    public class CategoryFilter : CategorySelection
+    private void NewCategoryTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        new public bool IsSelected
+        if (e.Key == VirtualKey.Enter && ConfirmAddCategoryButton.IsEnabled)
         {
-            get { return isSelected; }
-            set
-            {
-                SetProperty(ref isSelected, value);
-                //StrongReferenceMessenger.Default.Send(new FilterByCategoryChangeMessage());
-            }
+            e.Handled = true;
+            AddCategory();
         }
+    }
+
+    private void ConfirmAddCategory_Click(object sender, RoutedEventArgs e) => AddCategory();
+
+    private void AddCategory()
+    {
+        var name = NewCategoryTextBox.Text.Trim();
+        if (name.Length == 0 || !IsNameAvailable(name)) return;
+        AddCategoryFlyout.Hide();
+        AddRequested?.Invoke(this, name);
+    }
+
+    private async void Rename_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not CategoryItem category) return;
+
+        var textBox = new TextBox
+        {
+            Header = "Name",
+            Text = category.Name,
+            SelectionStart = 0,
+            SelectionLength = category.Name.Length,
+        };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(textBox, "RenameCategoryTextBox");
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = $"Rename category \"{category.Name}\"",
+            Content = textBox,
+            PrimaryButtonText = "Rename",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        textBox.TextChanged += (_, _) =>
+        {
+            var name = textBox.Text.Trim();
+            dialog.IsPrimaryButtonEnabled = name.Length > 0 && IsNameAvailable(name, category);
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+
+        var newName = textBox.Text.Trim();
+        if (newName == category.Name) return;
+        RenameRequested?.Invoke(this, new CategoryRenameRequest(category, newName));
+    }
+
+    private async void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not CategoryItem category) return;
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Delete category?",
+            Content = $"Category \"{category.Name}\" will be deleted and removed from all videos. Videos themselves are not deleted.",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        DeleteRequested?.Invoke(this, category);
     }
 }

@@ -18,22 +18,43 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0">
+            <StackPanel Grid.Row="0" Spacing="4">
                 <TextBlock Text="{x:Bind VM.UserUniqueId, Mode=OneWay}" />
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Click="Posted_Click" Content="Posted" />
-                    <Button Click="Liked_Click" Content="Liked" />
-                    <Button Click="Bookmarked_Click" Content="Bookmarked" />
+                    <Button
+                        AutomationProperties.AutomationId="PostedButton"
+                        Click="Posted_Click"
+                        Content="Posted" />
+                    <Button
+                        AutomationProperties.AutomationId="LikedButton"
+                        Click="Liked_Click"
+                        Content="Liked" />
+                    <Button
+                        AutomationProperties.AutomationId="BookmarkedButton"
+                        Click="Bookmarked_Click"
+                        Content="Bookmarked" />
                 </StackPanel>
                 <AutoSuggestBox
+                    AutomationProperties.AutomationId="VideoSearchBox"
                     PlaceholderText="Search"
                     QueryIcon="Find"
                     QuerySubmitted="SearchBox_QuerySubmitted"
                     Text="{x:Bind VM.Query, Mode=TwoWay}"
                     TextChanged="SearchBox_TextChanged" />
-                <controls:CategoriesFilterControl CategorySelectionChanged="CategoriesFilterControl_CategorySelectionChanged" />
+                <controls:CategoriesFilterControl
+                    AddRequested="CategoriesFilter_AddRequested"
+                    Categories="{x:Bind VM.Categories}"
+                    DeleteRequested="CategoriesFilter_DeleteRequested"
+                    FilterChanged="CategoriesFilter_FilterChanged"
+                    RenameRequested="CategoriesFilter_RenameRequested" />
             </StackPanel>
+            <controls:VideoCategoriesControl
+                Grid.Row="2"
+                Categories="{x:Bind VM.Categories}"
+                CategoryToggled="VideoCategories_CategoryToggled"
+                IsEnabled="{x:Bind VM.HasSelectedVideo, Mode=OneWay}" />
             <Grid Grid.Row="1">
                 <ListView
                     IsItemClickEnabled="True"

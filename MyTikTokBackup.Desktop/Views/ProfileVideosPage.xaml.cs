@@ -305,10 +305,29 @@ namespace MyTikTokBackup.Desktop.Views
             await VM.RefreshVideos();
         }
 
-        private async void CategoriesFilterControl_CategorySelectionChanged(object sender, Controls.CategorySelectionChangedEventArgs e)
+        private async void CategoriesFilter_FilterChanged(object sender, EventArgs e)
         {
-            VM.SelectedCategories.ReplaceRange(e.SelectedCategories.Select(x => x.Name));
             await VM.RefreshVideos();
+        }
+
+        private async void CategoriesFilter_AddRequested(object sender, string name)
+        {
+            await VM.AddCategoryAsync(name);
+        }
+
+        private async void CategoriesFilter_RenameRequested(object sender, Controls.CategoryRenameRequest e)
+        {
+            await VM.RenameCategoryAsync(e.Category, e.NewName);
+        }
+
+        private async void CategoriesFilter_DeleteRequested(object sender, Controls.CategoryItem category)
+        {
+            await VM.DeleteCategoryAsync(category);
+        }
+
+        private async void VideoCategories_CategoryToggled(object sender, Controls.CategoryToggledEventArgs e)
+        {
+            await VM.SetVideoCategoryAsync(e.Category, e.IsChecked);
         }
     }
 }
