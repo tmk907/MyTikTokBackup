@@ -46,38 +46,48 @@ namespace MyTikTokBackup.Desktop.Views
             this.Unloaded += ProfileVideosPage_Unloaded;
             webView.Loaded += WebView_Loaded;
             AddHandler(KeyDownEvent, new KeyEventHandler(ProfileVideosPage_KeyDown), true);
+            PreviewKeyDown += ProfileVideosPage_PreviewKeyDown;
         }
 
-        private static bool IsCtrlKeyPressed()
+        private static bool IsKeyPressed(VirtualKey key) =>
+            Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key).HasFlag(CoreVirtualKeyStates.Down);
+
+        private void ProfileVideosPage_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            var ctrlState = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
-            return ctrlState == CoreVirtualKeyStates.Down;
+            if (IsKeyPressed(VirtualKey.Control) && e.Key == VirtualKey.Space)
+            {
+                TogglePlayPause();
+            }
         }
 
-        private async void ProfileVideosPage_KeyDown(object sender, KeyRoutedEventArgs e)
+        /// <summary>
+        /// Up/Down always move to the previous/next video, wherever focus is. Handled in the tunneling
+        /// (preview) phase so the focused control (e.g. the ListView) doesn't also act on the key.
+        /// </summary>
+        private void ProfileVideosPage_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
         {
-            try
-            {
-                if (IsCtrlKeyPressed())
-                {
-                    switch (e.Key)
-                    {
-                        case Windows.System.VirtualKey.Up:
-                            await SelectPreviousVideo();
-                            break;
-                        case Windows.System.VirtualKey.Down:
-                            await SelectNextVideo();
-                            break;
-                        case Windows.System.VirtualKey.Space:
-                            TogglePlayPause();
-                            break;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.ToString());
-            }
+            if (e.Key is not (VirtualKey.Up or VirtualKey.Down)) return;
+            if (IsKeyPressed(VirtualKey.Menu) || IsKeyPressed(VirtualKey.Shift)) return;
+
+            e.Handled = true;
+            MoveSelection(e.Key == VirtualKey.Down ? 1 : -1);
+        }
+
+        /// <summary>Selects the video <paramref name="offset"/> positions away from the current one, if it exists.</summary>
+        private void MoveSelection(int offset)
+        {
+            if (VM.Videos.Count == 0) return;
+
+            var current = VM.Videos.IndexOf(VM.SelectedVideo);
+            // Nothing selected (or the selected video was filtered out): Down starts at the first item.
+            var target = current < 0
+                ? (offset > 0 ? 0 : -1)
+                : current + offset;
+            if (target < 0 || target >= VM.Videos.Count) return;
+
+            // Selecting in the ListView raises SelectionChanged, which loads the video.
+            VideosList.SelectedIndex = target;
+            VideosList.ScrollIntoView(VM.Videos[target]);
         }
 
         private void Play() => MediaPlayerElement.MediaPlayer?.Play();
@@ -284,22 +294,6 @@ namespace MyTikTokBackup.Desktop.Views
             if (video == null) return;
 
             await SelectVideo(video);
-        }
-
-        private async Task SelectPreviousVideo()
-        {
-            var index = VM.Videos.IndexOf(VM.SelectedVideo);
-            if (index == 0) return;
-            index--;
-            await SelectVideo(VM.Videos[index]);
-        }
-
-        private async Task SelectNextVideo()
-        {
-            var index = VM.Videos.IndexOf(VM.SelectedVideo);
-            if (index == VM.Videos.Count - 1) return;
-            index++;
-            await SelectVideo(VM.Videos[index]);
         }
 
         /// <summary>

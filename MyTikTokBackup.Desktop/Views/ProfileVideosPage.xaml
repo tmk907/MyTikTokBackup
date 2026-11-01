@@ -87,6 +87,8 @@
                 IsEnabled="{x:Bind VM.HasSelectedVideo, Mode=OneWay}" />
             <Grid Grid.Row="1">
                 <ListView
+                    x:Name="VideosList"
+                    AutomationProperties.AutomationId="VideosList"
                     IsItemClickEnabled="True"
                     ItemsSource="{x:Bind VM.Videos}"
                     SelectionChanged="Videos_SelectionChanged"
