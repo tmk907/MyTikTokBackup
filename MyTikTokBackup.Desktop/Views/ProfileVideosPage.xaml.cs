@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Flurl.Http;
 using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.UI.Dispatching;
+using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -14,6 +16,7 @@ using MyTikTokBackup.Core.TikTok;
 using MyTikTokBackup.Desktop.ViewModels;
 using Serilog;
 using Windows.Media.Core;
+using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
@@ -82,7 +85,11 @@ namespace MyTikTokBackup.Desktop.Views
 
         private void TogglePlayPause()
         {
-            if (MediaPlayerElement.MediaPlayer?.CurrentState == Windows.Media.Playback.MediaPlayerState.Playing)
+            var player = MediaPlayerElement.MediaPlayer;
+            if (player?.Source == null) return;
+
+            var isPlaying = player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
+            if (isPlaying)
             {
                 Pause();
             }
@@ -90,15 +97,111 @@ namespace MyTikTokBackup.Desktop.Views
             {
                 Play();
             }
+            ShowPlayPauseIndicator(isPlaying: !isPlaying);
+        }
+
+        private void ShowPlayPauseIndicator(bool isPlaying)
+        {
+            PlayPauseIcon.Symbol = isPlaying ? Symbol.Play : Symbol.Pause;
+            PlayPauseIndicatorStoryboard.Stop();
+            PlayPauseIndicatorStoryboard.Begin();
         }
 
         private void CleanUpMediaPlayer()
         {
-            mediaPlayerElement.MediaPlayer.Pause();
+            _progressTimer?.Stop();
+            var player = mediaPlayerElement.MediaPlayer;
+            if (player is null) return;
+            player.MediaOpened -= MediaPlayer_MediaOpened;
+            player.Pause();
             MediaPlayerElement.SetMediaPlayer(null!);
         }
 
-        private void ShowTransportControls(bool show) => MediaPlayerElement.AreTransportControlsEnabled = show;
+        public static Visibility BoolToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
+
+        private void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
+        {
+            // Raised on a background thread.
+            DispatcherQueue.TryEnqueue(UpdateVideoHostSize);
+        }
+
+        private void MediaPlayerElementContainer_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateVideoHostSize();
+
+        /// <summary>Fits the video surface (and its overlays) to the video's aspect ratio inside the available area.</summary>
+        private void UpdateVideoHostSize()
+        {
+            var availableWidth = MediaPlayerElementContainer.ActualWidth;
+            var availableHeight = MediaPlayerElementContainer.ActualHeight;
+            if (availableWidth <= 0 || availableHeight <= 0) return;
+
+            var session = MediaPlayerElement.MediaPlayer?.PlaybackSession;
+            double videoWidth = session?.NaturalVideoWidth ?? 0;
+            double videoHeight = session?.NaturalVideoHeight ?? 0;
+            if (videoWidth <= 0 || videoHeight <= 0)
+            {
+                videoWidth = VM.SelectedVideo?.Video.Width ?? 0;
+                videoHeight = VM.SelectedVideo?.Video.Height ?? 0;
+            }
+
+            if (videoWidth <= 0 || videoHeight <= 0)
+            {
+                VideoHost.Width = availableWidth;
+                VideoHost.Height = availableHeight;
+                return;
+            }
+
+            var aspect = videoWidth / videoHeight;
+            var width = Math.Min(availableWidth, availableHeight * aspect);
+            VideoHost.Width = width;
+            VideoHost.Height = width / aspect;
+        }
+
+        private void ProgressTimer_Tick(DispatcherQueueTimer sender, object args)
+        {
+            var session = MediaPlayerElement.MediaPlayer?.PlaybackSession;
+            var duration = session?.NaturalDuration.TotalMilliseconds ?? 0;
+            ProgressFillScale.ScaleX = duration > 0
+                ? Math.Clamp(session.Position.TotalMilliseconds / duration, 0, 1)
+                : 0;
+        }
+
+        private void SeekTo(double x)
+        {
+            var session = MediaPlayerElement.MediaPlayer?.PlaybackSession;
+            if (session is null || session.NaturalDuration <= TimeSpan.Zero || ProgressArea.ActualWidth <= 0) return;
+
+            var fraction = Math.Clamp(x / ProgressArea.ActualWidth, 0, 1);
+            session.Position = session.NaturalDuration * fraction;
+            ProgressFillScale.ScaleX = fraction;
+        }
+
+        private void ProgressArea_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            _isSeeking = ProgressArea.CapturePointer(e.Pointer);
+            SeekTo(e.GetCurrentPoint(ProgressArea).Position.X);
+            e.Handled = true;
+        }
+
+        private void ProgressArea_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (!_isSeeking) return;
+            SeekTo(e.GetCurrentPoint(ProgressArea).Position.X);
+            e.Handled = true;
+        }
+
+        private void ProgressArea_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            _isSeeking = false;
+            ProgressArea.ReleasePointerCapture(e.Pointer);
+            e.Handled = true;
+        }
+
+        private void ProgressArea_PointerCaptureLost(object sender, PointerRoutedEventArgs e) => _isSeeking = false;
+
+        // Keep clicks on the progress bar from also toggling play/pause on the video.
+        private void ProgressArea_Tapped(object sender, TappedRoutedEventArgs e) => e.Handled = true;
+
+        private void VideoHost_Tapped(object sender, TappedRoutedEventArgs e) => TogglePlayPause();
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -112,10 +215,19 @@ namespace MyTikTokBackup.Desktop.Views
             if (MediaPlayerElement.MediaPlayer is null)
             {
                 MediaPlayerElement.SetMediaPlayer(new());
+                MediaPlayerElement.MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
             }
 
             MediaPlayerElement.MediaPlayer.AutoPlay = true;
             MediaPlayerElement.MediaPlayer.IsLoopingEnabled = true;
+
+            if (_progressTimer is null)
+            {
+                _progressTimer = DispatcherQueue.CreateTimer();
+                _progressTimer.Interval = TimeSpan.FromMilliseconds(50);
+                _progressTimer.Tick += ProgressTimer_Tick;
+            }
+            _progressTimer.Start();
 
             await VM.ShowPostedVideos();
         }
@@ -125,6 +237,8 @@ namespace MyTikTokBackup.Desktop.Views
             CleanUpMediaPlayer();
         }
 
+        private DispatcherQueueTimer _progressTimer;
+        private bool _isSeeking;
         private bool loaded = false;
         private string mobileUserAgent = "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Mobile Safari/537.36";
 
@@ -179,6 +293,8 @@ namespace MyTikTokBackup.Desktop.Views
         private async Task SelectVideo(VideoUI video)
         {
             VM.SelectedVideo = video;
+            ProgressFillScale.ScaleX = 0;
+            UpdateVideoHostSize();
 
             if (!string.IsNullOrEmpty(video.FilePath))
             {
@@ -214,36 +330,6 @@ namespace MyTikTokBackup.Desktop.Views
         private async void Bookmarked_Click(object sender, RoutedEventArgs e)
         {
             await VM.ShowBookmarkedVideos();
-        }
-
-        private void MediaPlayerElementContainer_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            Log.Information("MediaPlayerElementContainer_Tapped");
-            var position = e.GetPosition(MediaPlayerElementContainer);
-            if (position.Y < MediaPlayerElementContainer.ActualHeight - 90)
-            {
-                var session = MediaPlayerElement.MediaPlayer.PlaybackSession;
-                if (session.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
-                {
-                    Pause();
-                }
-                else
-                {
-                    Play();
-                }
-            }
-        }
-
-        private void MediaPlayerElementContainer_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            Log.Information("MediaPlayerElementContainer_PointerEntered");
-            ShowTransportControls(true);
-        }
-
-        private void MediaPlayerElementContainer_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            Log.Information("MediaPlayerElementContainer_PointerExited");
-            ShowTransportControls(false);
         }
 
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -9,6 +9,36 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <!--  Pop in, hold, fade out  -->
+        <Storyboard x:Name="PlayPauseIndicatorStoryboard">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="PlayPauseIndicator" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0" />
+                <LinearDoubleKeyFrame KeyTime="0:0:0.1" Value="1" />
+                <LinearDoubleKeyFrame KeyTime="0:0:0.45" Value="1" />
+                <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0" />
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="PlayPauseIndicatorScale" Storyboard.TargetProperty="ScaleX">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.6" />
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <BackEase Amplitude="0.4" EasingMode="EaseOut" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="1.25" />
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="PlayPauseIndicatorScale" Storyboard.TargetProperty="ScaleY">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.6" />
+                <EasingDoubleKeyFrame KeyTime="0:0:0.2" Value="1">
+                    <EasingDoubleKeyFrame.EasingFunction>
+                        <BackEase Amplitude="0.4" EasingMode="EaseOut" />
+                    </EasingDoubleKeyFrame.EasingFunction>
+                </EasingDoubleKeyFrame>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="1.25" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </Page.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
@@ -77,14 +107,98 @@
             Grid.Column="1"
             SelectionChanged="Pivot_SelectionChanged">
             <PivotItem Header="Video">
-                <Grid
-                    x:Name="MediaPlayerElementContainer"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    PointerEntered="MediaPlayerElementContainer_PointerEntered"
-                    PointerExited="MediaPlayerElementContainer_PointerExited"
-                    Tapped="MediaPlayerElementContainer_Tapped">
-                    <MediaPlayerElement x:Name="mediaPlayerElement" AreTransportControlsEnabled="False" />
+                <Grid x:Name="MediaPlayerElementContainer" SizeChanged="MediaPlayerElementContainer_SizeChanged">
+                    <!--  Sized in code to the video's aspect ratio so overlays sit on the video, like on TikTok  -->
+                    <Grid
+                        x:Name="VideoHost"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        AutomationProperties.AutomationId="VideoSurface"
+                        AutomationProperties.Name="Video. Click to play or pause."
+                        Background="Black"
+                        CornerRadius="8"
+                        Tapped="VideoHost_Tapped"
+                        Visibility="{x:Bind local:ProfileVideosPage.BoolToVisibility(VM.HasSelectedVideo), Mode=OneWay}">
+                        <MediaPlayerElement
+                            x:Name="mediaPlayerElement"
+                            AreTransportControlsEnabled="False"
+                            Stretch="Uniform" />
+
+                        <!--  Play / pause feedback shown briefly after a click  -->
+                        <Border
+                            x:Name="PlayPauseIndicator"
+                            Width="80"
+                            Height="80"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Background="#66000000"
+                            CornerRadius="40"
+                            IsHitTestVisible="False"
+                            Opacity="0"
+                            RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform x:Name="PlayPauseIndicatorScale" />
+                            </Border.RenderTransform>
+                            <Viewbox Width="34" Height="34">
+                                <SymbolIcon
+                                    x:Name="PlayPauseIcon"
+                                    Foreground="White"
+                                    Symbol="Play" />
+                            </Viewbox>
+                        </Border>
+
+                        <!--  Author, description and progress bar over a bottom scrim  -->
+                        <StackPanel VerticalAlignment="Bottom">
+                            <StackPanel.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Offset="0" Color="#00000000" />
+                                    <GradientStop Offset="1" Color="#A6000000" />
+                                </LinearGradientBrush>
+                            </StackPanel.Background>
+                            <StackPanel
+                                Padding="14,40,14,6"
+                                IsHitTestVisible="False"
+                                Spacing="4">
+                                <TextBlock
+                                    FontSize="16"
+                                    FontWeight="SemiBold"
+                                    Foreground="White"
+                                    Text="{x:Bind VM.SelectedVideo.Video.Author.Nickname, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis" />
+                                <TextBlock
+                                    Foreground="White"
+                                    MaxLines="3"
+                                    Text="{x:Bind VM.SelectedVideo.Video.Description, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Grid
+                                x:Name="ProgressArea"
+                                Height="14"
+                                AutomationProperties.AutomationId="VideoProgress"
+                                AutomationProperties.Name="Video progress. Click to seek."
+                                Background="Transparent"
+                                PointerCaptureLost="ProgressArea_PointerCaptureLost"
+                                PointerMoved="ProgressArea_PointerMoved"
+                                PointerPressed="ProgressArea_PointerPressed"
+                                PointerReleased="ProgressArea_PointerReleased"
+                                Tapped="ProgressArea_Tapped">
+                                <Rectangle
+                                    Height="3"
+                                    VerticalAlignment="Bottom"
+                                    Fill="#4DFFFFFF" />
+                                <Rectangle
+                                    Height="3"
+                                    VerticalAlignment="Bottom"
+                                    Fill="White"
+                                    RenderTransformOrigin="0,0.5">
+                                    <Rectangle.RenderTransform>
+                                        <ScaleTransform x:Name="ProgressFillScale" ScaleX="0" />
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
                 </Grid>
             </PivotItem>
             <PivotItem Header="Web">
@@ -94,7 +208,8 @@
                     VerticalAlignment="Stretch" />
             </PivotItem>
             <PivotItem Header="Info">
-                <StackPanel Orientation="Vertical">
+                <ScrollViewer>
+                <StackPanel Orientation="Vertical" Spacing="8">
                     <controls:LabelValueControl Label="Video Id" Value="{x:Bind VM.SelectedVideo.Video.VideoId, Mode=OneWay}" />
                     <controls:LabelValueControl Label="Author Nickname" Value="{x:Bind VM.SelectedVideo.Video.Author.Nickname, Mode=OneWay}" />
                     <controls:LabelValueControl Label="Author Signature" Value="{x:Bind VM.SelectedVideo.Video.Author.Signature, Mode=OneWay}" />
@@ -108,6 +223,7 @@
                     <controls:LabelValueControl Label="Music Album" Value="{x:Bind VM.SelectedVideo.Video.Music.Album, Mode=OneWay}" />
                     <controls:LabelValueControl Label="Music Author" Value="{x:Bind VM.SelectedVideo.Video.Music.AuthorName, Mode=OneWay}" />
                 </StackPanel>
+                </ScrollViewer>
             </PivotItem>
         </Pivot>
 
