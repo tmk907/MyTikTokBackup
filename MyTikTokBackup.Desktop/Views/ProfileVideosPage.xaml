@@ -122,7 +122,23 @@
                         <MediaPlayerElement
                             x:Name="mediaPlayerElement"
                             AreTransportControlsEnabled="False"
-                            Stretch="Uniform" />
+                            Stretch="Uniform"
+                            Visibility="{x:Bind local:ProfileVideosPage.InvertBoolToVisibility(VM.SelectedVideo.IsImagePost), Mode=OneWay}" />
+
+                        <!--  Photo post: images are loaded in code-behind (ShowImagesAsync)  -->
+                        <FlipView
+                            x:Name="ImagesFlipView"
+                            AutomationProperties.AutomationId="PhotoPostFlipView"
+                            AutomationProperties.Name="Photo post images"
+                            Background="Black"
+                            SelectionChanged="ImagesFlipView_SelectionChanged"
+                            Visibility="{x:Bind local:ProfileVideosPage.BoolToVisibility(VM.SelectedVideo.IsImagePost), Mode=OneWay}">
+                            <FlipView.ItemTemplate>
+                                <DataTemplate x:DataType="BitmapImage">
+                                    <Image Source="{x:Bind}" Stretch="Uniform" />
+                                </DataTemplate>
+                            </FlipView.ItemTemplate>
+                        </FlipView>
 
                         <!--  Play / pause feedback shown briefly after a click  -->
                         <Border
@@ -148,15 +164,30 @@
                         </Border>
 
                         <!--  Author, description and progress bar over a bottom scrim  -->
-                        <StackPanel VerticalAlignment="Bottom">
+                        <StackPanel Padding="0,40,0,0" VerticalAlignment="Bottom">
                             <StackPanel.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
                                     <GradientStop Offset="0" Color="#00000000" />
                                     <GradientStop Offset="1" Color="#A6000000" />
                                 </LinearGradientBrush>
                             </StackPanel.Background>
+                            <!--  Dark pill keeps the pips readable on bright images  -->
+                            <Border
+                                Margin="0,0,0,8"
+                                Padding="6,0"
+                                HorizontalAlignment="Center"
+                                Background="#66000000"
+                                CornerRadius="12"
+                                Visibility="{x:Bind local:ProfileVideosPage.BoolToVisibility(VM.SelectedVideo.IsImagePost), Mode=OneWay}">
+                                <PipsPager
+                                    x:Name="ImagesPipsPager"
+                                    AutomationProperties.AutomationId="PhotoPostPipsPager"
+                                    AutomationProperties.Name="Photo post pages"
+                                    RequestedTheme="Dark"
+                                    SelectedIndexChanged="ImagesPipsPager_SelectedIndexChanged" />
+                            </Border>
                             <StackPanel
-                                Padding="14,40,14,6"
+                                Padding="14,0,14,8"
                                 IsHitTestVisible="False"
                                 Spacing="4">
                                 <TextBlock
@@ -182,7 +213,8 @@
                                 PointerMoved="ProgressArea_PointerMoved"
                                 PointerPressed="ProgressArea_PointerPressed"
                                 PointerReleased="ProgressArea_PointerReleased"
-                                Tapped="ProgressArea_Tapped">
+                                Tapped="ProgressArea_Tapped"
+                                Visibility="{x:Bind local:ProfileVideosPage.InvertBoolToVisibility(VM.SelectedVideo.IsImagePost), Mode=OneWay}">
                                 <Rectangle
                                     Height="3"
                                     VerticalAlignment="Bottom"

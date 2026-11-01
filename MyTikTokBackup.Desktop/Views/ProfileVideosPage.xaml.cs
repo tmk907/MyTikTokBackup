@@ -10,6 +10,7 @@ using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Web.WebView2.Core;
 using MyTikTokBackup.Core.TikTok;
@@ -119,29 +120,38 @@ namespace MyTikTokBackup.Desktop.Views
 
         public static Visibility BoolToVisibility(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
+        public static Visibility InvertBoolToVisibility(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
+
         private void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
         {
             // Raised on a background thread.
-            DispatcherQueue.TryEnqueue(UpdateVideoHostSize);
+            var width = sender.PlaybackSession.NaturalVideoWidth;
+            var height = sender.PlaybackSession.NaturalVideoHeight;
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (VM.SelectedVideo?.IsImagePost == true) return;
+                SetMediaSize(width, height);
+            });
         }
 
         private void MediaPlayerElementContainer_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateVideoHostSize();
 
-        /// <summary>Fits the video surface (and its overlays) to the video's aspect ratio inside the available area.</summary>
+        private void SetMediaSize(double width, double height)
+        {
+            _mediaWidth = width;
+            _mediaHeight = height;
+            UpdateVideoHostSize();
+        }
+
+        /// <summary>Fits the video surface (and its overlays) to the media's aspect ratio inside the available area.</summary>
         private void UpdateVideoHostSize()
         {
             var availableWidth = MediaPlayerElementContainer.ActualWidth;
             var availableHeight = MediaPlayerElementContainer.ActualHeight;
             if (availableWidth <= 0 || availableHeight <= 0) return;
 
-            var session = MediaPlayerElement.MediaPlayer?.PlaybackSession;
-            double videoWidth = session?.NaturalVideoWidth ?? 0;
-            double videoHeight = session?.NaturalVideoHeight ?? 0;
-            if (videoWidth <= 0 || videoHeight <= 0)
-            {
-                videoWidth = VM.SelectedVideo?.Video.Width ?? 0;
-                videoHeight = VM.SelectedVideo?.Video.Height ?? 0;
-            }
+            var videoWidth = _mediaWidth;
+            var videoHeight = _mediaHeight;
 
             if (videoWidth <= 0 || videoHeight <= 0)
             {
@@ -239,6 +249,8 @@ namespace MyTikTokBackup.Desktop.Views
 
         private DispatcherQueueTimer _progressTimer;
         private bool _isSeeking;
+        private double _mediaWidth;
+        private double _mediaHeight;
         private bool loaded = false;
         private string mobileUserAgent = "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Mobile Safari/537.36";
 
@@ -290,19 +302,82 @@ namespace MyTikTokBackup.Desktop.Views
             await SelectVideo(VM.Videos[index]);
         }
 
+        /// <summary>
+        /// Loads photo post images through StorageFile (file names often contain '#', which breaks file URIs).
+        /// </summary>
+        private async Task ShowImagesAsync(VideoUI video)
+        {
+            var images = new List<BitmapImage>();
+            foreach (var path in video.ImagePaths)
+            {
+                try
+                {
+                    var file = await StorageFile.GetFileFromPathAsync(path);
+                    using var stream = await file.OpenAsync(FileAccessMode.Read);
+                    var bitmap = new BitmapImage();
+                    await bitmap.SetSourceAsync(stream);
+                    images.Add(bitmap);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to load image {Path}", path);
+                }
+            }
+
+            // Selection may have changed while images were loading.
+            if (VM.SelectedVideo != video) return;
+
+            if (images.Count == 0) return;
+
+            // Reset the index before changing the page count. NumberOfPages is never set to 0:
+            // PipsPager fails natively when the count drops below the selected index.
+            ImagesPipsPager.SelectedPageIndex = 0;
+            ImagesPipsPager.NumberOfPages = images.Count;
+            ImagesFlipView.ItemsSource = images;
+            SetMediaSize(images[0].PixelWidth, images[0].PixelHeight);
+        }
+
+        // FlipView <-> PipsPager are synced in code rather than with a TwoWay binding,
+        // so an emptied FlipView (SelectedIndex -1) never reaches PipsPager.
+        private void ImagesFlipView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var index = ImagesFlipView.SelectedIndex;
+            if (index >= 0 && index < ImagesPipsPager.NumberOfPages && ImagesPipsPager.SelectedPageIndex != index)
+            {
+                ImagesPipsPager.SelectedPageIndex = index;
+            }
+        }
+
+        private void ImagesPipsPager_SelectedIndexChanged(PipsPager sender, PipsPagerSelectedIndexChangedEventArgs args)
+        {
+            var index = sender.SelectedPageIndex;
+            if (index >= 0 && index < ImagesFlipView.Items.Count && ImagesFlipView.SelectedIndex != index)
+            {
+                ImagesFlipView.SelectedIndex = index;
+            }
+        }
+
         private async Task SelectVideo(VideoUI video)
         {
             VM.SelectedVideo = video;
             ProgressFillScale.ScaleX = 0;
-            UpdateVideoHostSize();
+            ImagesFlipView.ItemsSource = null;
+            SetMediaSize(video.Video.Width, video.Video.Height);
 
-            if (!string.IsNullOrEmpty(video.FilePath))
+            if (video.IsImagePost)
             {
-                //var fileStream = File.OpenRead(video.FilePath);
-
+                MediaPlayerElement.MediaPlayer.Source = null;
+                await ShowImagesAsync(video);
+            }
+            else if (!string.IsNullOrEmpty(video.FilePath))
+            {
                 MediaPlayerElement.MediaPlayer.AutoPlay = videoPivot.SelectedIndex == 0;
                 var file = await StorageFile.GetFileFromPathAsync(video.FilePath);
                 MediaPlayerElement.MediaPlayer.Source = MediaSource.CreateFromStorageFile(file);
+            }
+            else
+            {
+                MediaPlayerElement.MediaPlayer.Source = null;
             }
             if (videoPivot.SelectedIndex == 1 && loaded)
             {

@@ -22,7 +22,11 @@ namespace MyTikTokBackup.Desktop.ViewModels
         public Core.Database.Video Video { get; init; }
         /// <summary>Category names; the same set instance is shared by every VideoUI of a given video.</summary>
         public HashSet<string> Categories { get; init; }
+        /// <summary>Downloaded .mp4, empty for photo posts or videos that aren't downloaded.</summary>
         public string FilePath { get; init; }
+        /// <summary>Downloaded images of a photo post, in display order.</summary>
+        public IReadOnlyList<string> ImagePaths { get; init; } = [];
+        public bool IsImagePost => ImagePaths.Count > 0;
         public string Url => $"https://www.tiktok.com/@{Video.Author.UniqueId}/video/{Video.VideoId}";
     }
 
@@ -303,13 +307,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 .Join(db.Videos.Include(x => x.Author), p => p.VideoId, v => v.VideoId, (p, v) => new { Index = p.Index, Video = v })
                 .OrderBy(x => x.Index).AsNoTracking().ToListAsync();
 
-            var idToPath = new Dictionary<string, string>();
-
-            foreach (var path in files)
-            {
-                var id = GetId(path);
-                idToPath.TryAdd(id, path);
-            }
+            var localMedia = GetLocalMedia(files);
 
             foreach(var item in profileVideos.Where(x=> x.Video.Author == null))
             {
@@ -335,12 +333,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 };
             }
 
-            videos = profileVideos.Select(item => new VideoUI
-            {
-                Video = item.Video,
-                FilePath = idToPath.GetValueOrDefault(item.Video.VideoId, ""),
-                Categories = GetCategorySet(item.Video.Id)
-            }).ToList();
+            videos = profileVideos.Select(item => CreateVideoUI(item.Video, localMedia)).ToList();
             return videos;
         }
 
@@ -350,26 +343,61 @@ namespace MyTikTokBackup.Desktop.ViewModels
             string folderPath = Path.Combine(_appConfiguration.DownloadsFolder, UserUniqueId, SelectedVideoType.ToString());
             if (!Directory.Exists(folderPath)) return new List<VideoUI>();
 
-            var files = Directory.EnumerateFiles(folderPath);
-
-            var idToPath = new Dictionary<string, string>();
-            foreach (var path in files)
-            {
-                var id = GetId(path);
-                idToPath.TryAdd(id, path);
-            }
+            var localMedia = GetLocalMedia(Directory.EnumerateFiles(folderPath));
+            var ids = localMedia.Keys.ToList();
 
             var videos = await db.Videos
-                .Where(x => idToPath.Keys.ToList().Contains(x.VideoId))
+                .Where(x => ids.Contains(x.VideoId))
                 .AsNoTracking().ToListAsync();
 
-            return videos.Select(x => new VideoUI
-            {
-                Video = x,
-                FilePath = idToPath.GetValueOrDefault(x.VideoId, ""),
-                Categories = GetCategorySet(x.Id)
-            }).ToList();
+            return videos.Select(x => CreateVideoUI(x, localMedia)).ToList();
         }
+
+        private VideoUI CreateVideoUI(Core.Database.Video video, Dictionary<string, LocalMedia> localMedia)
+        {
+            var media = localMedia.GetValueOrDefault(video.VideoId);
+            return new VideoUI
+            {
+                Video = video,
+                FilePath = media?.VideoPath ?? "",
+                ImagePaths = media?.ImagePaths ?? [],
+                Categories = GetCategorySet(video.Id)
+            };
+        }
+
+        private sealed record LocalMedia(string VideoPath, List<string> ImagePaths);
+
+        /// <summary>
+        /// Groups downloaded files by TikTok video id. Videos are "... [id].mp4";
+        /// photo posts are a set of images "... (index)[id].jpeg".
+        /// </summary>
+        private Dictionary<string, LocalMedia> GetLocalMedia(IEnumerable<string> files)
+        {
+            return files
+                .Select(path => (Path: path, Id: GetId(path)))
+                .Where(x => x.Id.Length > 0)
+                .GroupBy(x => x.Id)
+                .ToDictionary(g => g.Key, g =>
+                {
+                    var paths = g.Select(x => x.Path).ToList();
+                    var videoPath = paths.FirstOrDefault(p => !IsImage(p)) ?? "";
+                    var imagePaths = videoPath.Length > 0
+                        ? new List<string>()
+                        : paths.Where(IsImage).OrderBy(GetImageIndex).ThenBy(p => p, StringComparer.Ordinal).ToList();
+                    return new LocalMedia(videoPath, imagePaths);
+                });
+        }
+
+        private static bool IsImage(string path) =>
+            Path.GetExtension(path).ToLowerInvariant() is ".jpeg" or ".jpg" or ".png" or ".webp";
+
+        private static int GetImageIndex(string path)
+        {
+            var match = _imageIndexRegex.Match(Path.GetFileName(path));
+            return match.Success ? int.Parse(match.Groups[1].Value) : int.MaxValue;
+        }
+
+        private static readonly Regex _imageIndexRegex = new(@"\((\d+)\)\s*\[\w+\]\.\w+$", RegexOptions.Compiled);
 
         private string GetId(string path)
         {
