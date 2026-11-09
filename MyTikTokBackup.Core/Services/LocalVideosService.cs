@@ -14,6 +14,8 @@ namespace MyTikTokBackup.Core.Services
         IEnumerable<string> GetFileNames();
         IEnumerable<string> GetFilePaths();
         string GetPath(string videoId);
+        /// <summary>All local files of the video (photo posts have many images).</summary>
+        IReadOnlyList<string> GetPaths(string videoId);
         void Refresh();
     }
 
@@ -22,7 +24,8 @@ namespace MyTikTokBackup.Core.Services
         private readonly List<string> _filePaths;
         private readonly Regex _regex;
         private readonly IAppConfiguration _appConfiguration;
-        private Dictionary<string, string> _idToPath;
+        private Dictionary<string, List<string>> _idToPaths;
+        private readonly object _lock = new object();
 
         public LocalVideosService(IAppConfiguration appConfiguration)
         {
@@ -37,7 +40,7 @@ namespace MyTikTokBackup.Core.Services
                 if (m.DownloadStatus == Models.DownloadStatus.Downloaded)
                 {
                     r._filePaths.Add(m.FilePath);
-                    r._idToPath.TryAdd(m.Id, m.FilePath);
+                    r.AddPath(m.Id, m.FilePath);
                 }
             });
         }
@@ -54,11 +57,23 @@ namespace MyTikTokBackup.Core.Services
 
         public string GetPath(string videoId)
         {
-            if (_idToPath.ContainsKey(videoId))
+            if (_idToPaths.TryGetValue(videoId, out var paths))
             {
-                return _idToPath[videoId];
+                return paths[0];
             }
             return "";
+        }
+
+        public IReadOnlyList<string> GetPaths(string videoId)
+        {
+            lock (_lock)
+            {
+                if (videoId != null && _idToPaths.TryGetValue(videoId, out var paths))
+                {
+                    return paths.ToList();
+                }
+            }
+            return Array.Empty<string>();
         }
 
         public void Refresh()
@@ -79,16 +94,32 @@ namespace MyTikTokBackup.Core.Services
                     Id = GetId(x),
                     Path = x
                 }).Where(x => x.Id != "");
-                _idToPath = new Dictionary<string, string>();
+                _idToPaths = new Dictionary<string, List<string>>();
                 foreach(var item in map)
                 {
-                    _idToPath.TryAdd(item.Id, item.Path);
+                    AddPath(item.Id, item.Path);
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.ToString());
-                _idToPath = new Dictionary<string, string>();
+                _idToPaths = new Dictionary<string, List<string>>();
+            }
+        }
+
+        private void AddPath(string id, string path)
+        {
+            lock (_lock)
+            {
+                if (!_idToPaths.TryGetValue(id, out var paths))
+                {
+                    paths = new List<string>();
+                    _idToPaths[id] = paths;
+                }
+                if (!paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
             }
         }
 

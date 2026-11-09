@@ -37,4 +37,29 @@ public partial class CategoryItem : ObservableObject
         get => _isAssigned;
         set => SetProperty(ref _isAssigned, value);
     }
+
+    private bool _isAiSuggested;
+    /// <summary>AI suggests this category for the currently selected video.</summary>
+    public bool IsAiSuggested
+    {
+        get => _isAiSuggested;
+        set
+        {
+            if (SetProperty(ref _isAiSuggested, value)) OnPropertyChanged(nameof(ToolTip));
+        }
+    }
+
+    private float _aiConfidence;
+    public float AiConfidence
+    {
+        get => _aiConfidence;
+        set
+        {
+            if (SetProperty(ref _aiConfidence, value)) OnPropertyChanged(nameof(ToolTip));
+        }
+    }
+
+    public string ToolTip => IsAiSuggested
+        ? $"AI label ({AiConfidence:P0} confidence). Click to add the video to this category, right-click to reject."
+        : "Add or remove the selected video from this category";
 }

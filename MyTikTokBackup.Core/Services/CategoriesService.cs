@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
 using MyTikTokBackup.Core.Database;
+using MyTikTokBackup.Core.Messages;
 
 namespace MyTikTokBackup.Core.Services
 {
@@ -16,6 +18,11 @@ namespace MyTikTokBackup.Core.Services
         Task<Dictionary<int, List<string>>> GetVideoCategories();
         Task RemoveVideoFromCategory(string categoryName, int videoId);
         Task Rename(string oldName, string newName);
+
+        /// <summary>Suggested AI labels: database video id -> (category name -> score).</summary>
+        Task<Dictionary<int, Dictionary<string, float>>> GetVideoAiLabels(IReadOnlyCollection<int> videoIds = null);
+        Task RejectAiLabel(string categoryName, int videoId);
+        Task ClearRejectedAiLabels();
     }
 
     public class CategoriesService : ICategoriesService
@@ -27,6 +34,7 @@ namespace MyTikTokBackup.Core.Services
             using var db = new TikTokDbContext();
             db.Categories.Add(category);
             await db.SaveChangesAsync();
+            NotifyChanged();
             return category;
         }
 
@@ -35,8 +43,10 @@ namespace MyTikTokBackup.Core.Services
             using var db = new TikTokDbContext();
             await using var transaction = await db.Database.BeginTransactionAsync();
             await db.VideoCategories.Where(x => x.CategoryName == name).ExecuteDeleteAsync();
+            await db.VideoAiLabels.Where(x => x.CategoryName == name).ExecuteDeleteAsync();
             await db.Categories.Where(x => x.Name == name).ExecuteDeleteAsync();
             await transaction.CommitAsync();
+            NotifyChanged();
         }
 
         public async Task Rename(string oldName, string newName)
@@ -51,8 +61,12 @@ namespace MyTikTokBackup.Core.Services
             await db.VideoCategories
                 .Where(x => x.CategoryName == oldName)
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.CategoryName, newName));
+            await db.VideoAiLabels
+                .Where(x => x.CategoryName == oldName)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.CategoryName, newName));
             await db.Categories.Where(x => x.Name == oldName).ExecuteDeleteAsync();
             await transaction.CommitAsync();
+            NotifyChanged();
         }
 
         public async Task<List<Category>> GetAll()
@@ -81,6 +95,11 @@ namespace MyTikTokBackup.Core.Services
 
             db.VideoCategories.Add(new VideoCategory { CategoryName = categoryName, VideoId = videoId });
             await db.SaveChangesAsync();
+            // Accepting an AI label turns it into a user category.
+            await db.VideoAiLabels
+                .Where(x => x.CategoryName == categoryName && x.VideoId == videoId)
+                .ExecuteDeleteAsync();
+            NotifyChanged();
         }
 
         public async Task RemoveVideoFromCategory(string categoryName, int videoId)
@@ -89,6 +108,64 @@ namespace MyTikTokBackup.Core.Services
             await db.VideoCategories
                 .Where(x => x.CategoryName == categoryName && x.VideoId == videoId)
                 .ExecuteDeleteAsync();
+            // Don't let AI suggest back a category the user just removed.
+            await SetRejected(db, categoryName, videoId);
+            NotifyChanged();
+        }
+
+        public async Task<Dictionary<int, Dictionary<string, float>>> GetVideoAiLabels(IReadOnlyCollection<int> videoIds = null)
+        {
+            using var db = new TikTokDbContext();
+            var query = db.VideoAiLabels.Where(x => x.Status == AiLabelStatus.Suggested);
+            if (videoIds != null)
+            {
+                query = query.Where(x => videoIds.Contains(x.VideoId));
+            }
+            var labels = await query
+                .Select(x => new { x.VideoId, x.CategoryName, x.Score })
+                .ToListAsync();
+
+            return labels
+                .GroupBy(x => x.VideoId)
+                .ToDictionary(g => g.Key, g => g.ToDictionary(x => x.CategoryName, x => x.Score));
+        }
+
+        public async Task RejectAiLabel(string categoryName, int videoId)
+        {
+            using var db = new TikTokDbContext();
+            await SetRejected(db, categoryName, videoId);
+        }
+
+        public async Task ClearRejectedAiLabels()
+        {
+            using var db = new TikTokDbContext();
+            await db.VideoAiLabels.Where(x => x.Status == AiLabelStatus.Rejected).ExecuteDeleteAsync();
+            NotifyChanged();
+        }
+
+        private static async Task SetRejected(TikTokDbContext db, string categoryName, int videoId)
+        {
+            var label = await db.VideoAiLabels.FirstOrDefaultAsync(x => x.CategoryName == categoryName && x.VideoId == videoId);
+            if (label == null)
+            {
+                db.VideoAiLabels.Add(new VideoAiLabel
+                {
+                    CategoryName = categoryName,
+                    VideoId = videoId,
+                    Status = AiLabelStatus.Rejected,
+                    CreatedAt = DateTime.Now
+                });
+            }
+            else
+            {
+                label.Status = AiLabelStatus.Rejected;
+            }
+            await db.SaveChangesAsync();
+        }
+
+        private static void NotifyChanged()
+        {
+            StrongReferenceMessenger.Default.Send(new CategoriesChanged());
         }
 
         private async Task<string> GetAvailableColor()

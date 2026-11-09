@@ -19,6 +19,8 @@ namespace MyTikTokBackup.Core.Database
         public DbSet<ProfileVideo> ProfileVideos { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<VideoCategory> VideoCategories { get; set; }
+        public DbSet<VideoAiLabel> VideoAiLabels { get; set; }
+        public DbSet<VideoEmbedding> VideoEmbeddings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -53,6 +55,18 @@ namespace MyTikTokBackup.Core.Database
 
             modelBuilder.Entity<Category>()
                 .HasKey(x => x.Name);
+
+            modelBuilder.Entity<VideoAiLabel>()
+                .HasIndex(x => new { x.VideoId, x.CategoryName }).IsUnique();
+            modelBuilder.Entity<VideoAiLabel>()
+                .Property(x => x.CategoryName).IsRequired();
+            modelBuilder.Entity<VideoAiLabel>()
+                .Property(x => x.Status).HasConversion<int>();
+
+            modelBuilder.Entity<VideoEmbedding>()
+                .HasKey(x => x.VideoId);
+            modelBuilder.Entity<VideoEmbedding>()
+                .Property(x => x.VideoId).ValueGeneratedNever();
         }
     }
 }

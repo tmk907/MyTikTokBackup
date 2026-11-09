@@ -79,9 +79,16 @@
                     DeleteRequested="CategoriesFilter_DeleteRequested"
                     FilterChanged="CategoriesFilter_FilterChanged"
                     RenameRequested="CategoriesFilter_RenameRequested" />
+                <CheckBox
+                    AutomationProperties.AutomationId="ShowAiLabelsCheckBox"
+                    Content="Show AI labels"
+                    IsChecked="{x:Bind VM.ShowAiLabels, Mode=TwoWay}"
+                    ToolTipService.ToolTip="Show categories suggested by AI and include AI-labeled videos when filtering by category"
+                    Visibility="{x:Bind VM.IsAiLabelingEnabled, Mode=OneWay}" />
             </StackPanel>
             <controls:VideoCategoriesControl
                 Grid.Row="2"
+                AiLabelRejected="VideoCategories_AiLabelRejected"
                 Categories="{x:Bind VM.Categories}"
                 CategoryToggled="VideoCategories_CategoryToggled"
                 IsEnabled="{x:Bind VM.HasSelectedVideo, Mode=OneWay}" />

@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="MyTikTokBackup.Desktop.Controls.VideoCategoriesControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -24,10 +24,12 @@
                         AutomationIdPrefix="VideoCategory_"
                         Click="Category_Click"
                         ColorHex="{x:Bind Color, Mode=OneWay}"
+                        ContextRequested="Category_ContextRequested"
+                        IsAiSuggested="{x:Bind IsAiSuggested, Mode=OneWay}"
                         IsChecked="{x:Bind IsAssigned, Mode=TwoWay}"
                         Tag="{x:Bind}"
                         Text="{x:Bind Name, Mode=OneWay}"
-                        ToolTipService.ToolTip="Add or remove the selected video from this category" />
+                        ToolTipService.ToolTip="{x:Bind ToolTip, Mode=OneWay}" />
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>

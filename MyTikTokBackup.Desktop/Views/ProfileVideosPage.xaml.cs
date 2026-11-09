@@ -249,11 +249,13 @@ namespace MyTikTokBackup.Desktop.Views
             }
             _progressTimer.Start();
 
+            VM.Activate();
             await VM.ShowPostedVideos();
         }
 
         private void ProfileVideosPage_Unloaded(object sender, RoutedEventArgs e)
         {
+            VM.Deactivate();
             CleanUpMediaPlayer();
         }
 
@@ -483,6 +485,11 @@ namespace MyTikTokBackup.Desktop.Views
         private async void VideoCategories_CategoryToggled(object sender, Controls.CategoryToggledEventArgs e)
         {
             await VM.SetVideoCategoryAsync(e.Category, e.IsChecked);
+        }
+
+        private async void VideoCategories_AiLabelRejected(object sender, Controls.CategoryItem category)
+        {
+            await VM.RejectAiLabelAsync(category);
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -7,9 +7,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using MvvmHelpers;
 using MyTikTokBackup.Core.Database;
 using MyTikTokBackup.Core.Helpers;
+using MyTikTokBackup.Core.Messages;
 using MyTikTokBackup.Core.Models;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Desktop.Controls;
@@ -22,6 +24,8 @@ namespace MyTikTokBackup.Desktop.ViewModels
         public Core.Database.Video Video { get; init; }
         /// <summary>Category names; the same set instance is shared by every VideoUI of a given video.</summary>
         public HashSet<string> Categories { get; init; }
+        /// <summary>AI labels (category name -> confidence); the same instance is shared by every VideoUI of a given video.</summary>
+        public Dictionary<string, float> AiLabels { get; init; }
         /// <summary>Downloaded .mp4, empty for photo posts or videos that aren't downloaded.</summary>
         public string FilePath { get; init; }
         /// <summary>Downloaded images of a photo post, in display order.</summary>
@@ -37,6 +41,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
         private readonly IDispatcher _dispatcher;
         private readonly ICategoriesService _categoriesService;
         private readonly Dictionary<int, HashSet<string>> _videoCategories = new();
+        private readonly Dictionary<int, Dictionary<string, float>> _videoAiLabels = new();
         private bool _areCategoriesLoaded;
 
         public ProfileVideosViewModel(IAppConfiguration appConfiguration, IDispatcher dispatcher, ICategoriesService categoriesService)
@@ -88,6 +93,24 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             get { return query; }
             set { SetProperty(ref query, value); }
+        }
+
+        public bool IsAiLabelingEnabled => _appConfiguration.AiLabelsEnabled;
+
+        private bool AreAiLabelsVisible => IsAiLabelingEnabled && ShowAiLabels;
+
+        /// <summary>Show AI labels in the selected video categories and include AI-labeled videos in the category filter.</summary>
+        public bool ShowAiLabels
+        {
+            get => _appConfiguration.ShowAiLabels;
+            set
+            {
+                if (_appConfiguration.ShowAiLabels == value) return;
+                _appConfiguration.ShowAiLabels = value;
+                OnPropertyChanged();
+                SyncAssignedCategories();
+                _ = RefreshVideos();
+            }
         }
 
         /// <summary>All categories, sorted by name. Used by both the filter and the video assignment controls.</summary>
@@ -168,6 +191,12 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 {
                     GetCategorySet(videoId).UnionWith(names);
                 }
+
+                foreach (var (videoId, labels) in await _categoriesService.GetVideoAiLabels())
+                {
+                    var set = GetAiLabelSet(videoId);
+                    foreach (var (name, confidence) in labels) set[name] = confidence;
+                }
             }
             catch (Exception ex)
             {
@@ -185,12 +214,87 @@ namespace MyTikTokBackup.Desktop.ViewModels
             return set;
         }
 
+        private Dictionary<string, float> GetAiLabelSet(int videoId)
+        {
+            if (!_videoAiLabels.TryGetValue(videoId, out var set))
+            {
+                set = new Dictionary<string, float>();
+                _videoAiLabels[videoId] = set;
+            }
+            return set;
+        }
+
         private void SyncAssignedCategories()
         {
             var assigned = selectedVideo?.Categories;
+            var aiLabels = selectedVideo?.AiLabels;
+            var showAiLabels = AreAiLabelsVisible;
             foreach (var category in Categories)
             {
                 category.IsAssigned = assigned?.Contains(category.Name) == true;
+                var confidence = 0f;
+                category.IsAiSuggested = showAiLabels && !category.IsAssigned && aiLabels?.TryGetValue(category.Name, out confidence) == true;
+                category.AiConfidence = confidence;
+            }
+        }
+
+        /// <summary>Starts listening for AI label changes; call when the page is shown.</summary>
+        public void Activate()
+        {
+            OnPropertyChanged(nameof(IsAiLabelingEnabled));
+            if (StrongReferenceMessenger.Default.IsRegistered<AiLabelsChanged>(this)) return;
+            StrongReferenceMessenger.Default.Register<ProfileVideosViewModel, AiLabelsChanged>(this, (r, m) => _ = r.ReloadAiLabelsAsync(m.VideoIds));
+        }
+
+        public void Deactivate()
+        {
+            StrongReferenceMessenger.Default.UnregisterAll(this);
+        }
+
+        private async Task ReloadAiLabelsAsync(IReadOnlyCollection<int> videoIds)
+        {
+            try
+            {
+                var labels = await _categoriesService.GetVideoAiLabels(videoIds);
+                _dispatcher.Run(() =>
+                {
+                    foreach (var videoId in videoIds)
+                    {
+                        var set = GetAiLabelSet(videoId);
+                        set.Clear();
+                        if (labels.TryGetValue(videoId, out var videoLabels))
+                        {
+                            foreach (var (name, confidence) in videoLabels) set[name] = confidence;
+                        }
+                    }
+                    // Don't refresh the list here - it would reset the user's selection.
+                    SyncAssignedCategories();
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to reload AI labels");
+            }
+        }
+
+        public async Task RejectAiLabelAsync(CategoryItem category)
+        {
+            var video = selectedVideo;
+            if (video == null) return;
+
+            try
+            {
+                await _categoriesService.RejectAiLabel(category.Name, video.Video.Id);
+                video.AiLabels.Remove(category.Name);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to reject AI label {Name} of video {VideoId}", category.Name, video.Video.VideoId);
+            }
+
+            if (video == selectedVideo)
+            {
+                SyncAssignedCategories();
             }
         }
 
@@ -230,6 +334,10 @@ namespace MyTikTokBackup.Desktop.ViewModels
             {
                 set.Add(newName);
             }
+            foreach (var labels in _videoAiLabels.Values)
+            {
+                if (labels.Remove(oldName, out var confidence)) labels[newName] = confidence;
+            }
             category.Name = newName;
             Categories.Remove(category);
             InsertSorted(category);
@@ -250,6 +358,10 @@ namespace MyTikTokBackup.Desktop.ViewModels
             foreach (var set in _videoCategories.Values)
             {
                 set.Remove(category.Name);
+            }
+            foreach (var labels in _videoAiLabels.Values)
+            {
+                labels.Remove(category.Name);
             }
             Categories.Remove(category);
 
@@ -274,6 +386,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 {
                     await _categoriesService.AddVideoToCategory(category.Name, video.Video.Id);
                     video.Categories.Add(category.Name);
+                    video.AiLabels.Remove(category.Name);
                 }
                 else
                 {
@@ -288,7 +401,7 @@ namespace MyTikTokBackup.Desktop.ViewModels
 
             if (video == selectedVideo)
             {
-                category.IsAssigned = video.Categories.Contains(category.Name);
+                SyncAssignedCategories();
             }
         }
 
@@ -361,7 +474,8 @@ namespace MyTikTokBackup.Desktop.ViewModels
                 Video = video,
                 FilePath = media?.VideoPath ?? "",
                 ImagePaths = media?.ImagePaths ?? [],
-                Categories = GetCategorySet(video.Id)
+                Categories = GetCategorySet(video.Id),
+                AiLabels = GetAiLabelSet(video.Id)
             };
         }
 
@@ -408,10 +522,11 @@ namespace MyTikTokBackup.Desktop.ViewModels
         {
             var filteredByCategories = _selectedCollection;
             var selectedCategories = Categories.Where(x => x.IsFilterSelected).Select(x => x.Name).ToList();
+            var showAiLabels = AreAiLabelsVisible;
             if (selectedCategories.Count > 0)
             {
                 filteredByCategories = _selectedCollection
-                    .Where(x => selectedCategories.Any(x.Categories.Contains));
+                    .Where(x => selectedCategories.Any(c => x.Categories.Contains(c) || (showAiLabels && x.AiLabels.ContainsKey(c))));
             }
 
             if (string.IsNullOrWhiteSpace(query))

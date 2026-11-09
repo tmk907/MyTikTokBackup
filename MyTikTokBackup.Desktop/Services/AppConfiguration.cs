@@ -14,6 +14,18 @@ namespace MyTikTokBackup.Desktop.Services
             set { Preferences.Set(nameof(DownloadsFolder), value); }
         }
 
+        public bool AiLabelsEnabled
+        {
+            get { return Preferences.Get(nameof(AiLabelsEnabled), false); }
+            set { Preferences.Set(nameof(AiLabelsEnabled), value); }
+        }
+
+        public bool ShowAiLabels
+        {
+            get { return Preferences.Get(nameof(ShowAiLabels), true); }
+            set { Preferences.Set(nameof(ShowAiLabels), value); }
+        }
+
         public string Categories => SettingsFiles.Categories;
         public string Metadata => SettingsFiles.Metadata;
         public string Videos => SettingsFiles.Videos;

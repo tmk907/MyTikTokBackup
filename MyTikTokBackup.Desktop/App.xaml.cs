@@ -4,6 +4,7 @@ using AutoMapper;
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.UI.Xaml;
+using MyTikTokBackup.Core.AiLabels;
 using MyTikTokBackup.Core.Services;
 using MyTikTokBackup.Desktop.Services;
 using MyTikTokBackup.Desktop.ViewModels;
@@ -39,6 +40,8 @@ namespace MyTikTokBackup.Desktop
 
             var helper = new Core.Database.DatabaseHelper();
             helper.EnsureCreated();
+
+            Ioc.Default.GetService<IAiLabelingService>().Start();
         }
 
         private void RegisterNavigation()
@@ -81,6 +84,9 @@ namespace MyTikTokBackup.Desktop
             services.AddSingleton<ICategoriesService, CategoriesService>();
             services.AddSingleton<ILocalVideosService, LocalVideosService>();
             services.AddSingleton<IAppConfiguration, AppConfiguration>();
+            services.AddSingleton<IMediaFrameExtractor, WinRtMediaFrameExtractor>();
+            services.AddSingleton<AiModelManager>();
+            services.AddSingleton<IAiLabelingService, AiLabelingService>();
 
             // Services
             services.AddTransient<MainViewModel>();

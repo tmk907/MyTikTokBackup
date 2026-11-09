@@ -21,6 +21,7 @@ namespace MyTikTokBackup.Core.Database
             Migration1(db);
             Migration1b(db);
             Migration2(db);
+            Migration3(db);
         }
 
         private void Migration1(TikTokDbContext db)
@@ -146,6 +147,61 @@ namespace MyTikTokBackup.Core.Database
                     Log.Error(ex.ToString());
                     throw;
                 }
+            }
+        }
+
+        private void Migration3(TikTokDbContext db)
+        {
+            var labelsCount = EFCoreHelper.RawSqlQuery<int>(
+                """
+                select count(*) from pragma_table_info('VideoAiLabels')
+                """, dbReader => dbReader.GetFieldValue<int>(0));
+            var embeddingsCount = EFCoreHelper.RawSqlQuery<int>(
+                """
+                select count(*) from pragma_table_info('VideoEmbeddings')
+                """, dbReader => dbReader.GetFieldValue<int>(0));
+
+            try
+            {
+                if (labelsCount.FirstOrDefault() == 0)
+                {
+                    db.Database.ExecuteSqlRaw(
+                    """
+                    CREATE TABLE "VideoAiLabels" (
+                        "Id" INTEGER NOT NULL CONSTRAINT "PK_VideoAiLabels" PRIMARY KEY AUTOINCREMENT,
+                        "VideoId" INTEGER NOT NULL,
+                        "CategoryName" TEXT NOT NULL,
+                        "Score" REAL NOT NULL,
+                        "Status" INTEGER NOT NULL,
+                        "CreatedAt" TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX "IX_VideoAiLabels_VideoId_CategoryName" ON "VideoAiLabels" ("VideoId", "CategoryName");
+                    """);
+                    Log.Information($"Database {db.DatabaseFolder} migrated to v3 (VideoAiLabels)");
+                }
+
+                if (embeddingsCount.FirstOrDefault() == 0)
+                {
+                    db.Database.ExecuteSqlRaw(
+                    """
+                    CREATE TABLE "VideoEmbeddings" (
+                        "VideoId" INTEGER NOT NULL CONSTRAINT "PK_VideoEmbeddings" PRIMARY KEY,
+                        "TextVector" BLOB NULL,
+                        "TextHash" TEXT NULL,
+                        "ImageVector" BLOB NULL,
+                        "ImageSource" TEXT NULL,
+                        "ModelVersion" TEXT NULL,
+                        "UpdatedAt" TEXT NOT NULL
+                    );
+                    """);
+                    Log.Information($"Database {db.DatabaseFolder} migrated to v3 (VideoEmbeddings)");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error while migrating database to v3");
+                Log.Error(ex.ToString());
+                throw;
             }
         }
 

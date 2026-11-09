@@ -18,6 +18,8 @@ namespace MyTikTokBackup.Desktop.Views
         {
             ViewModel = Ioc.Default.GetService<SettingsViewModel>();
             this.InitializeComponent();
+            this.Loaded += (s, e) => ViewModel.Activate();
+            this.Unloaded += (s, e) => ViewModel.Deactivate();
         }
     }
 }

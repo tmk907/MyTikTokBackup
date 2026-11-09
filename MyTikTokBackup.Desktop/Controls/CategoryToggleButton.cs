@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -20,6 +20,7 @@ public sealed partial class CategoryToggleButton : ToggleButton
     private readonly SolidColorBrush _pressedBrush = new(Colors.Gray);
     private readonly SolidColorBrush _foregroundBrush = new(Colors.White);
     private readonly TextBlock _textBlock = new() { VerticalAlignment = VerticalAlignment.Center };
+    private readonly Border _aiBadge;
 
     public CategoryToggleButton()
     {
@@ -46,9 +47,27 @@ public sealed partial class CategoryToggleButton : ToggleButton
             Background = _colorBrush,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        // Text badge rather than a glyph: Segoe Fluent Icons isn't available on Windows 10.
+        _aiBadge = new Border
+        {
+            CornerRadius = new CornerRadius(4),
+            Padding = new Thickness(4, 0, 4, 1),
+            VerticalAlignment = VerticalAlignment.Center,
+            Visibility = Visibility.Collapsed,
+            Background = GetThemeBrush("AccentFillColorDefaultBrush", Colors.DodgerBlue),
+            Child = new TextBlock
+            {
+                Text = "AI",
+                FontSize = 10,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                Foreground = GetThemeBrush("TextOnAccentFillColorPrimaryBrush", Colors.White),
+            },
+        };
+
         var panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
         panel.Children.Add(strip);
         panel.Children.Add(_textBlock);
+        panel.Children.Add(_aiBadge);
         Content = panel;
     }
 
@@ -76,11 +95,46 @@ public sealed partial class CategoryToggleButton : ToggleButton
         DependencyProperty.Register(nameof(ColorHex), typeof(string), typeof(CategoryToggleButton),
             new PropertyMetadata(null, (d, e) => ((CategoryToggleButton)d).OnColorChanged((string)e.NewValue)));
 
+    /// <summary>Shows the category as an AI label: "AI" badge, dashed look (italic text, border in the category color).</summary>
+    public bool IsAiSuggested
+    {
+        get => (bool)GetValue(IsAiSuggestedProperty);
+        set => SetValue(IsAiSuggestedProperty, value);
+    }
+
+    public static readonly DependencyProperty IsAiSuggestedProperty =
+        DependencyProperty.Register(nameof(IsAiSuggested), typeof(bool), typeof(CategoryToggleButton),
+            new PropertyMetadata(false, (d, e) => ((CategoryToggleButton)d).OnIsAiSuggestedChanged((bool)e.NewValue)));
+
     private void OnTextChanged(string text)
     {
         _textBlock.Text = text ?? string.Empty;
-        AutomationProperties.SetName(this, text ?? string.Empty);
+        UpdateAutomationName();
         AutomationProperties.SetAutomationId(this, AutomationIdPrefix + text);
+    }
+
+    private void OnIsAiSuggestedChanged(bool isAiSuggested)
+    {
+        _aiBadge.Visibility = isAiSuggested ? Visibility.Visible : Visibility.Collapsed;
+        _textBlock.FontStyle = isAiSuggested ? Windows.UI.Text.FontStyle.Italic : Windows.UI.Text.FontStyle.Normal;
+        // The template's normal state uses TemplateBinding BorderBrush (resources aren't re-evaluated after the template is applied).
+        if (isAiSuggested)
+        {
+            BorderBrush = _colorBrush;
+            BorderThickness = new Thickness(1.5);
+        }
+        else
+        {
+            ClearValue(BorderBrushProperty);
+            ClearValue(BorderThicknessProperty);
+        }
+        UpdateAutomationName();
+    }
+
+    private void UpdateAutomationName()
+    {
+        var name = Text ?? string.Empty;
+        AutomationProperties.SetName(this, IsAiSuggested ? $"{name} (AI label)" : name);
     }
 
     private void OnColorChanged(string hex)
@@ -103,6 +157,9 @@ public sealed partial class CategoryToggleButton : ToggleButton
         }
         return Color.FromArgb((byte)(argb >> 24), (byte)(argb >> 16), (byte)(argb >> 8), (byte)argb);
     }
+
+    private static Brush GetThemeBrush(string key, Color fallback) =>
+        Application.Current.Resources.TryGetValue(key, out var value) && value is Brush brush ? brush : new SolidColorBrush(fallback);
 
     private static Color Shade(Color c, double factor) =>
         Color.FromArgb(c.A, (byte)(c.R * factor), (byte)(c.G * factor), (byte)(c.B * factor));
