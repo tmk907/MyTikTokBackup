@@ -88,7 +88,18 @@ namespace MyTikTokBackup.Desktop.ViewModels
             }
         }
 
-        public string AiModelsSize =>$"{_aiModelManager.TotalSize / 1048576} MB";
+        public double AiLabelsSensitivity
+        {
+            get => _appConfiguration.AiLabelsSensitivity;
+            set
+            {
+                if (_appConfiguration.AiLabelsSensitivity == value) return;
+                _aiLabelingService.SetSensitivity(value);
+                OnPropertyChanged();
+            }
+        }
+
+        public string AiModelsSize => $"{_aiModelManager.TotalSize / 1048576} MB";
 
         private string aiStatusText;
         public string AiStatusText

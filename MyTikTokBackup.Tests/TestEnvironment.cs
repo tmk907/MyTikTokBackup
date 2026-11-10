@@ -13,6 +13,7 @@ namespace MyTikTokBackup.Tests
         public bool AiLabelsEnabled { get; set; }
         public bool ShowAiLabels { get; set; } = true;
         public bool AiAnalyzeVideoFrames { get; set; } = true;
+        public double AiLabelsSensitivity { get; set; } = 0.5;
         public string Categories => "";
         public string Videos => "";
         public string Metadata => "";

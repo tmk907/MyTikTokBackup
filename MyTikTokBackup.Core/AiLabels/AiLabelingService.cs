@@ -32,6 +32,8 @@ namespace MyTikTokBackup.Core.AiLabels
         void Disable();
         /// <summary>Turns the slow analysis of video frames on or off; when off, only descriptions are used.</summary>
         void SetAnalyzeVideoFrames(bool value);
+        /// <summary>0 = fewer, more accurate labels, 1 = more labels.</summary>
+        void SetSensitivity(double value);
         void RequestRun(AiRunKind kind, TimeSpan delay);
         /// <summary>Deletes all suggested labels and runs the labeling again.</summary>
         Task RecomputeAllAsync();
@@ -61,7 +63,6 @@ namespace MyTikTokBackup.Core.AiLabels
         private readonly AiModelManager _modelManager;
         private readonly ILocalVideosService _localVideosService;
         private readonly IMediaFrameExtractor _frameExtractor;
-        private readonly AiLabelingOptions _options = AiLabelingOptions.Default;
 
         private readonly object _lock = new object();
         private readonly SemaphoreSlim _signal = new SemaphoreSlim(0);
@@ -135,6 +136,14 @@ namespace MyTikTokBackup.Core.AiLabels
                 Cancel();
             }
             RequestRun(AiRunKind.Incremental, TimeSpan.Zero);
+        }
+
+        public void SetSensitivity(double value)
+        {
+            if (_appConfiguration.AiLabelsSensitivity == value) return;
+            _appConfiguration.AiLabelsSensitivity = value;
+            // Debounced - the slider reports every step while dragging.
+            RequestRun(AiRunKind.RescoreOnly, CategoriesDelay);
         }
 
         public void RequestRun(AiRunKind kind, TimeSpan delay)
@@ -497,7 +506,8 @@ namespace MyTikTokBackup.Core.AiLabels
             }).ToList();
 
             cancellationToken.ThrowIfCancellationRequested();
-            var results = AiLabelScorer.Score(videos, inputs, rejected, _options);
+            var options = AiLabelingOptions.ForSensitivity(_appConfiguration.AiLabelsSensitivity);
+            var results = AiLabelScorer.Score(videos, inputs, rejected, options, cancellationToken);
             Log.Information("AI labeling scored {Videos} videos, {Categories} categories, {Labels} labels: {PerCategory}",
                 videos.Count, categories.Count, results.Count,
                 string.Join(", ", results.GroupBy(x => x.CategoryName).Select(g => $"{g.Key}={g.Count()}")));

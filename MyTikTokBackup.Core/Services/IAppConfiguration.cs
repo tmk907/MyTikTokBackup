@@ -6,6 +6,7 @@
         bool AiLabelsEnabled { get; set; }
         bool ShowAiLabels { get; set; }
         bool AiAnalyzeVideoFrames { get; set; }
+        double AiLabelsSensitivity { get; set; }
 
         string Categories { get; }
         string Videos { get; }

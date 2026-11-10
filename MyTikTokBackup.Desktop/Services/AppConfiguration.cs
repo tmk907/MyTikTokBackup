@@ -32,6 +32,12 @@ namespace MyTikTokBackup.Desktop.Services
             set { Preferences.Set(nameof(AiAnalyzeVideoFrames), value); }
         }
 
+        public double AiLabelsSensitivity
+        {
+            get { return Preferences.Get(nameof(AiLabelsSensitivity), 0.5); }
+            set { Preferences.Set(nameof(AiLabelsSensitivity), value); }
+        }
+
         public string Categories => SettingsFiles.Categories;
         public string Metadata => SettingsFiles.Metadata;
         public string Videos => SettingsFiles.Videos;

@@ -40,6 +40,31 @@
                     OffContent="Text only"
                     OnContent="Text and frames"
                     ToolTipService.ToolTip="When off, only descriptions, hashtags and music titles are used and the vision model is not downloaded" />
+                <StackPanel MaxWidth="400" HorizontalAlignment="Left">
+                    <Slider
+                        AutomationProperties.AutomationId="AiLabelsSensitivitySlider"
+                        AutomationProperties.Name="Number of AI labels"
+                        Header="Number of AI labels"
+                        Maximum="1"
+                        Minimum="0"
+                        SnapsTo="StepValues"
+                        StepFrequency="0.1"
+                        TickFrequency="0.1"
+                        TickPlacement="Outside"
+                        Value="{x:Bind ViewModel.AiLabelsSensitivity, Mode=TwoWay}"
+                        Width="400" />
+                    <Grid>
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="Fewer, more accurate" />
+                        <TextBlock
+                            HorizontalAlignment="Right"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="More, less accurate" />
+                    </Grid>
+                </StackPanel>
                 <TextBlock
                     AutomationProperties.AutomationId="AiLabelsStatus"
                     Text="{x:Bind ViewModel.AiStatusText, Mode=OneWay}"

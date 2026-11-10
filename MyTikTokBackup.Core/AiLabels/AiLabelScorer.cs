@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyTikTokBackup.Core.AiLabels
 {
@@ -27,8 +29,8 @@ namespace MyTikTokBackup.Core.AiLabels
     public record AiLabelResult(int VideoId, string CategoryName, float Confidence);
 
     /// <summary>
-    /// Scores (video, category) pairs. Signals:
-    /// kNN similarity to videos the user assigned to the category (text and image) and
+    /// Scores (video, category) pairs. Categories with enough user-assigned videos use <see cref="AiLinearClassifier"/>.
+    /// Smaller ones combine kNN similarity to videos the user assigned to the category (text and image) and
     /// zero-shot similarity to the category name (text and image).
     /// Each signal is standardized per category (median / MAD over candidate videos) so they can be combined,
     /// and the threshold of a category is derived from leave-one-out scores of its user-assigned videos.
@@ -41,7 +43,8 @@ namespace MyTikTokBackup.Core.AiLabels
             IReadOnlyList<AiVideoVectors> videos,
             IReadOnlyList<AiCategoryInput> categories,
             IReadOnlySet<(int VideoId, string CategoryName)> rejected,
-            AiLabelingOptions options = null)
+            AiLabelingOptions options = null,
+            CancellationToken cancellationToken = default)
         {
             options ??= AiLabelingOptions.Default;
             int n = videos.Count;
@@ -56,7 +59,23 @@ namespace MyTikTokBackup.Core.AiLabels
             var thresholds = new float[categories.Count];
             var fewShot = new bool[categories.Count];
 
-            for (int c = 0; c < categories.Count; c++)
+            // Videos with any user category are reliable negatives of the other categories,
+            // a stable sample of the remaining videos is used as weak negatives.
+            var isLabeled = new bool[n];
+            foreach (var category in categories)
+            {
+                foreach (var id in category.Positives ?? Array.Empty<int>())
+                {
+                    if (index.TryGetValue(id, out var i)) isLabeled[i] = true;
+                }
+            }
+            var unlabeledSample = Enumerable.Range(0, n)
+                .Where(i => !isLabeled[i])
+                .OrderBy(i => (uint)videos[i].VideoId * 2246822519u)
+                .Take(options.UnlabeledSamples)
+                .ToList();
+
+            Parallel.For(0, categories.Count, new ParallelOptions { MaxDegreeOfParallelism = options.MaxParallelism, CancellationToken = cancellationToken }, c =>
             {
                 var category = categories[c];
                 var positives = (category.Positives ?? Array.Empty<int>())
@@ -77,7 +96,12 @@ namespace MyTikTokBackup.Core.AiLabels
                 }
 
                 var combined = new float[n];
-                if (fewShot[c])
+                if (positives.Length >= options.MinPositivesForClassifier)
+                {
+                    combined = AiLinearClassifier.Margins(videos, isPositive, isLabeled, unlabeledSample, options, cancellationToken);
+                    thresholds[c] = 0;
+                }
+                else if (fewShot[c])
                 {
                     var kT = Standardize(Knn(videos, textPositives, v => v.Text, options.NearestNeighbors), isPositive);
                     var kI = Standardize(Knn(videos, imagePositives, v => v.Image, options.NearestNeighbors), isPositive);
@@ -108,7 +132,7 @@ namespace MyTikTokBackup.Core.AiLabels
                 // Videos already assigned by the user are not candidates.
                 foreach (var p in positives) combined[p] = float.NaN;
                 scores[c] = combined;
-            }
+            });
 
             var results = new List<AiLabelResult>();
             var candidates = new List<(int Category, float Margin)>();
