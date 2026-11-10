@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -24,11 +25,15 @@ namespace MyTikTokBackup.Core.AiLabels
 
         public string GetPath(string fileName) => Path.Combine(ModelsFolder, fileName);
 
-        public long TotalSize => AiModelCatalog.Files.Sum(x => x.Size);
+        /// <summary>Model files needed by the current configuration, the vision model only when video frames are analyzed.</summary>
+        private IEnumerable<AiModelFile> RequiredFiles => AiModelCatalog.Files
+            .Where(x => _appConfiguration.AiAnalyzeVideoFrames || x.FileName != AiModelCatalog.VisionModel);
+
+        public long TotalSize => RequiredFiles.Sum(x => x.Size);
 
         public bool AreModelsPresent()
         {
-            return AiModelCatalog.Files.All(IsPresent);
+            return RequiredFiles.All(IsPresent);
         }
 
         private bool IsPresent(AiModelFile file)
@@ -41,11 +46,12 @@ namespace MyTikTokBackup.Core.AiLabels
         public async Task EnsureModelsAsync(IProgress<(long Done, long Total)> progress, CancellationToken cancellationToken)
         {
             Directory.CreateDirectory(ModelsFolder);
-            var total = TotalSize;
-            long done = AiModelCatalog.Files.Where(IsPresent).Sum(x => x.Size);
+            var files = RequiredFiles.ToList();
+            var total = files.Sum(x => x.Size);
+            long done = files.Where(IsPresent).Sum(x => x.Size);
             progress?.Report((done, total));
 
-            foreach (var file in AiModelCatalog.Files.Where(x => !IsPresent(x)))
+            foreach (var file in files.Where(x => !IsPresent(x)))
             {
                 Log.Information("Downloading AI model {File} from {Url}", file.FileName, file.Url);
                 var targetPath = GetPath(file.FileName);

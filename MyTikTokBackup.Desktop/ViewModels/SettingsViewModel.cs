@@ -76,7 +76,19 @@ namespace MyTikTokBackup.Desktop.ViewModels
             }
         }
 
-        public string AiModelsSize => $"{_aiModelManager.TotalSize / 1048576} MB";
+        public bool AiAnalyzeVideoFrames
+        {
+            get => _appConfiguration.AiAnalyzeVideoFrames;
+            set
+            {
+                if (_appConfiguration.AiAnalyzeVideoFrames == value) return;
+                _aiLabelingService.SetAnalyzeVideoFrames(value);
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(AiModelsSize));
+            }
+        }
+
+        public string AiModelsSize =>$"{_aiModelManager.TotalSize / 1048576} MB";
 
         private string aiStatusText;
         public string AiStatusText

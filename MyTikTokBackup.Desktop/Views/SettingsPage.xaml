@@ -26,13 +26,20 @@
                     Style="{StaticResource SubtitleTextBlockStyle}"
                     Text="AI labels" />
                 <TextBlock TextWrapping="Wrap">
-                    Suggests your categories for videos, based on descriptions, hashtags and video frames.
-                    Everything runs locally; models are downloaded once (<Run Text="{x:Bind ViewModel.AiModelsSize}" />).
+                    Suggests your categories for videos, based on descriptions, hashtags and optionally video frames.
+                    Everything runs locally; models are downloaded once (<Run Text="{x:Bind ViewModel.AiModelsSize, Mode=OneWay}" />).
                 </TextBlock>
                 <ToggleSwitch
                     AutomationProperties.AutomationId="AiLabelsToggle"
                     Header="Automatic AI labels"
                     IsOn="{x:Bind ViewModel.AiLabelsEnabled, Mode=TwoWay}" />
+                <ToggleSwitch
+                    AutomationProperties.AutomationId="AiAnalyzeVideoFramesToggle"
+                    Header="Analyze video frames (slower, more accurate)"
+                    IsOn="{x:Bind ViewModel.AiAnalyzeVideoFrames, Mode=TwoWay}"
+                    OffContent="Text only"
+                    OnContent="Text and frames"
+                    ToolTipService.ToolTip="When off, only descriptions, hashtags and music titles are used and the vision model is not downloaded" />
                 <TextBlock
                     AutomationProperties.AutomationId="AiLabelsStatus"
                     Text="{x:Bind ViewModel.AiStatusText, Mode=OneWay}"

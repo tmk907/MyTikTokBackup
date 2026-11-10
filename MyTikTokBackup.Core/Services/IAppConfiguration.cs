@@ -5,6 +5,7 @@
         string DownloadsFolder { get; set; }
         bool AiLabelsEnabled { get; set; }
         bool ShowAiLabels { get; set; }
+        bool AiAnalyzeVideoFrames { get; set; }
 
         string Categories { get; }
         string Videos { get; }

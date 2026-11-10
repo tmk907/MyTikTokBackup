@@ -30,6 +30,8 @@ namespace MyTikTokBackup.Core.AiLabels
         void Start();
         void Enable();
         void Disable();
+        /// <summary>Turns the slow analysis of video frames on or off; when off, only descriptions are used.</summary>
+        void SetAnalyzeVideoFrames(bool value);
         void RequestRun(AiRunKind kind, TimeSpan delay);
         /// <summary>Deletes all suggested labels and runs the labeling again.</summary>
         Task RecomputeAllAsync();
@@ -121,6 +123,18 @@ namespace MyTikTokBackup.Core.AiLabels
             _appConfiguration.AiLabelsEnabled = false;
             Cancel();
             SetStatus(AiLabelingState.Disabled, 0, 0, "");
+        }
+
+        public void SetAnalyzeVideoFrames(bool value)
+        {
+            if (_appConfiguration.AiAnalyzeVideoFrames == value) return;
+            _appConfiguration.AiAnalyzeVideoFrames = value;
+            if (!value && _status.State is AiLabelingState.EmbeddingImages or AiLabelingState.Downloading)
+            {
+                // Stop analyzing frames (or downloading the vision model), the new run uses only text.
+                Cancel();
+            }
+            RequestRun(AiRunKind.Incremental, TimeSpan.Zero);
         }
 
         public void RequestRun(AiRunKind kind, TimeSpan delay)
@@ -244,7 +258,8 @@ namespace MyTikTokBackup.Core.AiLabels
 
             var labelCount = await ScoreAsync(context, cancellationToken).ConfigureAwait(false);
 
-            if (kind == AiRunKind.Incremental)
+            // Image vectors computed earlier are still used for scoring when frame analysis is turned off.
+            if (kind == AiRunKind.Incremental && _appConfiguration.AiAnalyzeVideoFrames)
             {
                 if (await EmbedImagesAsync(context, cancellationToken).ConfigureAwait(false))
                 {

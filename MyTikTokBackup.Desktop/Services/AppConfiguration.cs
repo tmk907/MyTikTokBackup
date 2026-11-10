@@ -26,6 +26,12 @@ namespace MyTikTokBackup.Desktop.Services
             set { Preferences.Set(nameof(ShowAiLabels), value); }
         }
 
+        public bool AiAnalyzeVideoFrames
+        {
+            get { return Preferences.Get(nameof(AiAnalyzeVideoFrames), true); }
+            set { Preferences.Set(nameof(AiAnalyzeVideoFrames), value); }
+        }
+
         public string Categories => SettingsFiles.Categories;
         public string Metadata => SettingsFiles.Metadata;
         public string Videos => SettingsFiles.Videos;
